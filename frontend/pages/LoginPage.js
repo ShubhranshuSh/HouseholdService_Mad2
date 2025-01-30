@@ -41,28 +41,28 @@ export default {
     },
     methods: {
       async submitLogin() {
-        // Disable the button while submitting
         this.isSubmitting = true;
-  
-        // Ensure both fields are filled before submitting
+    
         if (!this.email || !this.password) {
           alert("Please fill in all fields.");
           this.isSubmitting = false;
           return;
         }
-  
+    
         try {
           const res = await fetch(location.origin + '/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: this.email, password: this.password }),
           });
-  
+    
           if (res.ok) {
             const data = await res.json();
             localStorage.setItem('user', JSON.stringify(data)); // Store user data in localStorage
             alert("Login successful!");
-            this.$router.push(data.redirect_url); // Navigate to the next page
+    
+            // Use the `redirect_url` from the response to navigate
+            this.$router.push(data.redirect_url);
           } else {
             const errorData = await res.json();
             alert(errorData.message || "Invalid login credentials.");
@@ -71,7 +71,7 @@ export default {
           console.error("Login error:", error);
           alert("An error occurred during login. Please try again later.");
         } finally {
-          this.isSubmitting = false; // Re-enable the button
+          this.isSubmitting = false;
         }
       },
     },

@@ -1,9 +1,38 @@
+from functools import wraps
 from flask import current_app as app, jsonify, request, render_template
-from flask_security import auth_required, verify_password, hash_password
+from flask_security import auth_required, verify_password, hash_password, login_required , current_user , logout_user , login_user
 from backend.models import db
 import os
 
 datastore = app.security.datastore
+
+
+
+# Role-based access control
+
+def admin_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.has_role('admin'):
+            return jsonify({'message': 'Access Denied: Admin only'}), 403
+        return func(*args, **kwargs)
+    return wrapper
+
+def service_professional_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.has_role('service_professional'):
+            return jsonify({'message': 'Access Denied: Service Professional only'}), 403
+        return func(*args, **kwargs)
+    return wrapper
+
+def customer_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.has_role('customer'):
+            return jsonify({'message': 'Access Denied: Customer only'}), 403
+        return func(*args, **kwargs)
+    return wrapper
 
 # Home route
 @app.route("/")
@@ -32,14 +61,32 @@ def login():
 
     if not user:
         return jsonify({'message': 'User not found'}), 404
+    
+    if not user.active:
+        return jsonify({'message': 'Login failed , Contact Admin'}), 403
 
     if verify_password(password, user.password):
+        login_user(user)
+
+        role = [role.name for role in user.roles]
+
+        if 'admin' in role:
+            redirect_path = '/admin/home'
+        elif 'service_professional' in role:
+            redirect_path = '/service_professional/home'
+        elif 'customer' in role:
+            redirect_path = '/customer/home'
+        else:
+            redirect_path = '/'
+
         return jsonify({
             'token': user.get_auth_token(),
             'email': user.email,
-            'role': [role.name for role in user.roles],  # Return roles as a list
-            'id': user.id
+            'role': role,  # Return roles as a list
+            'id': user.id,
+            'redirect_url': redirect_path  # Add redirect URL
         }), 200
+
 
     return jsonify({'message': 'Incorrect password'}), 400
 
@@ -170,3 +217,32 @@ def register_service_professional():
         app.logger.error(f"Error creating service professional user: {e}")
         return jsonify({'message': 'Error creating service professional user'}), 500
 
+# @app.route('/logout', methods=['GET'])
+# def logout():
+#     logout_user()
+#     return jsonify({"message": 'User logged out.'}), 200
+
+
+# Admin Routes
+@app.route('/admin/home', methods=['GET'])
+@auth_required('token')  # Ensure only authenticated users can access this
+@admin_required  # Ensure only admins can access this
+def admin_home():
+    try:
+        # Just return a success response or minimal content
+        return jsonify({"message": "Welcome to the Admin Dashboard"}), 200
+    except Exception as e:
+        app.logger.error(f"Error loading admin home: {e}")
+        return jsonify({"message": "Failed to load admin home"}), 500
+
+       
+
+
+
+    
+
+# Service Professional Routes
+
+
+
+# Customer Routes
