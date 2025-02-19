@@ -1,7 +1,5 @@
 import Navbar from "../components/Navbar.js";
 
-
-
 export default {
     components: {
         Navbar, // Register Navbar as a component
@@ -152,7 +150,7 @@ export default {
 
             try {
                 // Sending data to backend
-                const res = await fetch(location.origin + '/customer/register', {
+                const res = await fetch(location.origin + '/register/customer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -160,16 +158,17 @@ export default {
                     body: JSON.stringify(formData),
                 });
 
-                if (res.ok) {
-                    alert('Registration successful!');
-                    this.$router.push('/login');
-                } else {
+                if (!res.ok) {
                     const errorData = await res.json();
-                    alert(`Error: ${errorData.message}`);
+                    throw new Error(errorData.message || "Registration failed");
                 }
+
+                alert('Registration successful!');
+                this.$router.push('/login');
+
             } catch (error) {
-                console.error('Error:', error);
-                alert("An error occurred while submitting the form. Please try again.");
+                console.error('Network or Server Error:', error);
+                alert("An error occurred while submitting the form. Please check your internet connection or try again later.");
             }
         },
     },

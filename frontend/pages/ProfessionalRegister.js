@@ -5,112 +5,48 @@ export default {
         <h2 class="text-center mb-4">Register as Service Professional</h2>
         <div class="form-group mb-3">
           <label for="name">Full Name</label>
-          <input
-            id="name"
-            type="text"
-            class="form-control"
-            placeholder="Enter full name"
-            v-model="name"
-          />
+          <input id="name" type="text" class="form-control" placeholder="Enter full name" v-model="name" />
         </div>
         <div class="form-group mb-3">
           <label for="email">Email Address</label>
-          <input
-            id="email"
-            type="email"
-            class="form-control"
-            placeholder="Enter email"
-            v-model="email"
-          />
+          <input id="email" type="email" class="form-control" placeholder="Enter email" v-model="email" />
         </div>
         <div class="form-group mb-3">
           <label for="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            class="form-control"
-            placeholder="Enter password"
-            v-model="password"
-          />
+          <input id="password" type="password" class="form-control" placeholder="Enter password" v-model="password" />
         </div>
         <div class="form-group mb-3">
           <label for="confirmPassword">Confirm Password</label>
-          <input
-            id="confirmPassword"
-            type="password"
-            class="form-control"
-            placeholder="Confirm password"
-            v-model="confirm_password"
-          />
+          <input id="confirmPassword" type="password" class="form-control" placeholder="Confirm password" v-model="confirm_password" />
         </div>
         <div class="form-group mb-3">
           <label for="phone">Phone Number</label>
-          <input
-            id="phone"
-            type="text"
-            class="form-control"
-            placeholder="Enter phone number"
-            v-model="phone"
-          />
+          <input id="phone" type="text" class="form-control" placeholder="Enter phone number" v-model="phone" />
         </div>
         <div class="form-group mb-3">
           <label for="address">Address</label>
-          <input
-            id="address"
-            type="text"
-            class="form-control"
-            placeholder="Enter address"
-            v-model="address"
-          />
+          <input id="address" type="text" class="form-control" placeholder="Enter address" v-model="address" />
         </div>
         <div class="form-group mb-3">
           <label for="pincode">Pincode</label>
-          <input
-            id="pincode"
-            type="text"
-            class="form-control"
-            placeholder="Enter pincode"
-            v-model="pincode"
-          />
+          <input id="pincode" type="text" class="form-control" placeholder="Enter pincode" v-model="pincode" />
         </div>
         <div class="form-group mb-3">
           <label for="experience">Experience (Years)</label>
-          <input
-            id="experience"
-            type="number"
-            class="form-control"
-            placeholder="Enter years of experience"
-            v-model="experience"
-          />
+          <input id="experience" type="number" class="form-control" placeholder="Enter years of experience" v-model="experience" />
         </div>
         <div class="form-group mb-3">
           <label for="resume">Upload Resume (PDF)</label>
-          <input
-            id="resume"
-            type="file"
-            class="form-control"
-            @change="handleFileUpload"
-            accept="application/pdf"
-          />
+          <input id="resume" type="file" class="form-control" @change="handleFileUpload" accept="application/pdf" />
         </div>
         <div class="form-group mb-4">
           <label for="serviceCategory">Select Service Category</label>
-          <select
-            id="serviceCategory"
-            class="form-select"
-            v-model="service_category"
-          >
+          <select id="serviceCategory" class="form-select" v-model="service_category">
             <option disabled value="">Select Service Category</option>
-            <option v-for="service in services" :key="service" :value="service">
-              {{ service }}
-            </option>
+            <option v-for="service in services" :key="service" :value="service">{{ service }}</option>
           </select>
         </div>
-        <button
-          class="btn btn-primary w-100"
-          :disabled="isSubmitting"
-          @click="submitRegister"
-        >
+        <button class="btn btn-primary w-100" :disabled="isSubmitting" @click="submitRegister">
           Register
         </button>
       </div>
@@ -118,14 +54,14 @@ export default {
   `,
   data() {
     return {
-      email: null,
-      password: null,
-      confirm_password: null,
-      name: null,
-      phone: null,
-      address: null,
-      pincode: null,
-      experience: null,
+      email: "",
+      password: "",
+      confirm_password: "",
+      name: "",
+      phone: "",
+      address: "",
+      pincode: "",
+      experience: "",
       resume: null,
       service_category: "",
       services: [
@@ -153,6 +89,11 @@ export default {
       this.resume = event.target.files[0];
     },
     async submitRegister() {
+      if (!this.email || !this.password || !this.name || !this.phone || !this.address || !this.pincode || !this.experience || !this.service_category) {
+        alert("Please fill all fields.");
+        return;
+      }
+
       if (this.password !== this.confirm_password) {
         alert("Passwords do not match!");
         return;
@@ -184,8 +125,11 @@ export default {
         });
 
         if (res.ok) {
-          alert("Registration successful!");
+          alert("Registration successful! Your application is under review.");
           this.resetForm();
+
+          // Redirect to login page after successful registration
+          window.location.hash = "#/login";
         } else {
           const errorData = await res.json();
           alert(`Error: ${errorData.message}`);
@@ -198,14 +142,14 @@ export default {
       }
     },
     resetForm() {
-      this.email = null;
-      this.password = null;
-      this.confirm_password = null;
-      this.name = null;
-      this.phone = null;
-      this.address = null;
-      this.pincode = null;
-      this.experience = null;
+      this.email = "";
+      this.password = "";
+      this.confirm_password = "";
+      this.name = "";
+      this.phone = "";
+      this.address = "";
+      this.pincode = "";
+      this.experience = "";
       this.resume = null;
       this.service_category = "";
     },
