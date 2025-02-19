@@ -22,7 +22,7 @@ export default {
           <div class="collapse navbar-collapse" id="adminNavbar">
             <ul class="navbar-nav mx-auto">
               <li class="nav-item">
-                <router-link class="nav-link" to="/admin/requests" style="color: white; font-weight: 500;">Requests</router-link>
+                <router-link class="nav-link" to="/admin/application" style="color: white; font-weight: 500;">Application</router-link>
               </li>
               <li class="nav-item">
                 <router-link class="nav-link" to="/admin/professionals" style="color: white; font-weight: 500;">Professionals</router-link>
