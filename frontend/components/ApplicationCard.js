@@ -4,7 +4,7 @@ export default {
     <div class="card shadow-lg p-4 mb-4 border-0 rounded-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0 fw-bold">
-                <a href="#" class="text-dark text-decoration-none">{{ application.name }}</a>
+                <router-link :to="'/admin/application/' + application.id" class="text-dark text-decoration-none">{{ application.name }}</router-link>
             </h4>
             <span class="badge bg-primary fs-6">{{ application.service_category }}</span>
         </div>

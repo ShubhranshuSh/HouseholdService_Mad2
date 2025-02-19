@@ -2,7 +2,7 @@ from flask import Flask
 from backend.config import LocalDevelopmentConfig
 from backend.models import db , User, Role
 from flask_security import Security, SQLAlchemyUserDatastore , auth_required
-# from backend.resources import api
+from backend.resources import api
 
 def createApp():
     app = Flask(__name__ , static_folder='frontend' , static_url_path='/static' , template_folder='frontend')
@@ -12,7 +12,7 @@ def createApp():
     
     db.init_app(app)
 
-    # api.init_app(app)
+    api.init_app(app)
 
     #flask-security
     datastore = SQLAlchemyUserDatastore(db, User, Role)

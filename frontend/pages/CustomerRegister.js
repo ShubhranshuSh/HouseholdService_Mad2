@@ -7,32 +7,7 @@ export default {
     template: `
     <div>
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light py-3 shadow-sm">
-            <div class="container">
-              <!-- Logo -->
-              <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <img src="/static/logo/logo_svg.svg" alt="App Logo" style="width: 80px; height: auto;" class="me-2">
-              </a>
-              <!-- Toggler for Mobile View -->
-              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-              </button>
-              <!-- Navbar Links -->
-              <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav">
-                  <li class="nav-item">
-                    <router-link to="/" class="nav-link fs-5">Home</router-link>
-                  </li>
-                  <li class="nav-item">
-                    <router-link to="/login" class="nav-link fs-5">Login</router-link>
-                  </li>
-                  <li class="nav-item">
-                    <router-link to="/register" class="nav-link active fs-5">Register</router-link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </nav>
+        <Navbar />
         <!-- Registration Form -->
         <div class="d-flex justify-content-center align-items-center vh-100" style="margin-top: 4rem;">
             <div class="card p-4 shadow" style="width: 28rem;">

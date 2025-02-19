@@ -5,6 +5,7 @@ import CustomerRegister from "../pages/CustomerRegister.js";
 import ProfessionalRegister from "../pages/ProfessionalRegister.js";
 import AdminHome from "../pages/AdminHome.js";
 import AdminApplication from "../pages/AdminApplication.js";
+import ProfessionalDetailApp from "../components/ProfessionalDetailApp.js";
 
 
 // Mapping of routes to components
@@ -15,7 +16,9 @@ const routes = [
     {path: '/register/customer', component: CustomerRegister},
     {path: '/register/professional', component: ProfessionalRegister},
     {path: '/admin/home', component: AdminHome},
-    { path: '/admin/application', component: AdminApplication }
+    { path: '/admin/application', component: AdminApplication },
+    { path: '/admin/application/:id', component: ProfessionalDetailApp }
+
     // You can add the Register route later if needed
 ];
 
