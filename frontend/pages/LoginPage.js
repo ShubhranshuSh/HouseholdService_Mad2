@@ -1,3 +1,5 @@
+import store from '../utils/store.js';  // Adjust the path as needed
+
 export default {
   template: `
       <div class="d-flex justify-content-center align-items-center vh-100">
@@ -58,7 +60,8 @@ export default {
   
         if (res.ok) {
           const data = await res.json();
-          localStorage.setItem('user', JSON.stringify(data)); // Store user data in localStorage
+          // Use Vuex action to login and store user data
+          this.$store.dispatch('login', data);
           alert("Login successful!");
   
           // Use the `redirect_url` from the response to navigate

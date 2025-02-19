@@ -71,6 +71,8 @@ def login():
             return jsonify({'message': 'Your Application Status is Under Process'}), 403
         elif user.accepted == "No":
             return jsonify({'message': 'Your Application got Rejected'}), 403
+        elif user.accepted == "Yes":
+            redirect_path = '/service_professional/profile'  # Redirecting to profile page
 
     if verify_password(password, user.password):
         login_user(user)
@@ -79,8 +81,8 @@ def login():
 
         if 'admin' in role:
             redirect_path = '/admin/home'
-        elif 'service_professional' in role:
-            redirect_path = '/service_professional/home'
+        elif 'service_professional' in role and user.accepted == "Yes":
+            redirect_path = '/service_professional/profile'  # Ensure profile redirection
         elif 'customer' in role:
             redirect_path = '/customer/home'
         else:
@@ -95,6 +97,7 @@ def login():
         }), 200
 
     return jsonify({'message': 'Incorrect password'}), 400
+
 
 # Register routes
 @app.route('/register/customer', methods=['POST'])
@@ -204,3 +207,30 @@ def register_service_professional():
         db.session.rollback()
         app.logger.error(f"Error creating service professional user: {e}")
         return jsonify({'message': 'Error creating service professional user'}), 500
+    
+@app.route('/admin/applications', methods=['GET'])
+@admin_required
+@auth_required('token')
+def get_pending_applications():
+    pending_professionals = User.query.join(User.roles).filter(
+        Role.name == 'service_professional',
+        User.accepted == "Pending"
+    ).all()
+
+    applications = [
+        {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "address": user.address,
+            "pincode": user.pincode,
+            "experience": user.experience,
+            "service_category": user.service_category,
+            "resume": user.resume,
+            "date_applied": user.fs_uniquifier  # Using this as a proxy for application date
+        }
+        for user in pending_professionals
+    ]
+
+    return jsonify(applications), 200

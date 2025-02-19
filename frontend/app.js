@@ -1,4 +1,5 @@
 import router from "./utils/router.js";
+import store from "./utils/store.js";
 
 const app = new Vue({
     el: "#app",
@@ -8,4 +9,5 @@ const app = new Vue({
         </div>
     `,
     router,
+    store,
 });
