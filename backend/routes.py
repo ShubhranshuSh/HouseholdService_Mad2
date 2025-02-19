@@ -1,6 +1,6 @@
 from functools import wraps
 import os
-from flask import current_app as app, jsonify, request, render_template
+from flask import current_app as app, jsonify, request, render_template , abort, send_file
 from flask_security import auth_required, verify_password, hash_password, login_required, current_user, logout_user, login_user
 from backend.models import db, User, Role
 
@@ -234,3 +234,25 @@ def get_pending_applications():
     ]
 
     return jsonify(applications), 200
+
+@app.route('/admin/application/<int:service_professional_id>/resume', methods=['GET'])
+@auth_required('token')
+@admin_required
+def get_resume(service_professional_id):
+    service_professional = User.query.join(User.roles).filter(
+        Role.name == 'service_professional',
+        User.id == service_professional_id
+    ).first()
+
+    if not service_professional or not service_professional.resume:
+        abort(404)
+
+    resume_path = service_professional.resume
+    if not os.path.exists(resume_path):
+        abort(404)
+
+    try:
+        return send_file(resume_path, mimetype='application/pdf')
+    except Exception as e:
+        app.logger.error(f"Error sending resume file: {e}")
+        abort(500)

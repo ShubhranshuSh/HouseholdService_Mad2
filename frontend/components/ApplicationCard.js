@@ -16,18 +16,47 @@ export default {
         </div>
 
         <div class="d-flex justify-content-end gap-2">
-            <button class="btn btn-outline-primary btn-sm">
+            <button @click="viewResume" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-file-earmark-text"></i> View Resume
             </button>
-            <button class="btn btn-outline-danger btn-sm">
+            <button @click="updateStatus('No')" class="btn btn-outline-danger btn-sm">
                 <i class="bi bi-x-circle"></i> Reject
             </button>
-            <button class="btn btn-success btn-sm">
+            <button @click="updateStatus('Yes')" class="btn btn-success btn-sm">
                 <i class="bi bi-check-circle"></i> Accept
             </button>
         </div>
     </div>
     `,
+    methods: {
+        async updateStatus(status) {
+            try {
+                const response = await fetch(`/api/admin/application/${this.application.id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': this.$store.state.auth_token
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                alert(result.message); // Show success message
+                // Optionally refresh the applications list or update the UI accordingly
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Failed to update application status: ${error.message}`);
+            }
+        },
+        viewResume() {
+            window.open(`/api/admin/application/${this.application.id}/resume`, '_blank');
+        }
+    },
     computed: {
         formattedDate() {
             if (!this.application.date_applied) return "Invalid Date"; 

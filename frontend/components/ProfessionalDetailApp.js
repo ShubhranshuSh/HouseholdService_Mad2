@@ -1,7 +1,5 @@
 import AdminNavbar from "../components/AdminNavbar.js";
 
-
-
 export default {
     components: {
         AdminNavbar,
@@ -34,11 +32,16 @@ export default {
                 <p><strong>Pincode:</strong> {{ professional.pincode }}</p>
                 <p><strong>Experience:</strong> {{ professional.experience }} years</p>
                 <p><strong>Service Category:</strong> {{ professional.service_category }}</p>
-                <button class="btn btn-primary">View Resume</button>
+                <button @click="viewResume" class="btn btn-primary">View Resume</button>
             </div>
         </div>
     </div>
     `,
+    methods: {
+        viewResume() {
+            window.open(`/api/admin/application/${this.$route.params.id}/resume`, '_blank');
+        }
+    },
     async mounted() {
         const id = this.$route.params.id;
         try {
