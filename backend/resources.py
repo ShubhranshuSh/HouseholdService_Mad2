@@ -8,6 +8,8 @@ from flask import abort, send_file
 
 api = Api(prefix='/api')
 
+# Restul fields for Admin Accept , Reject Application
+
 service_professional_fields = {
     'id': fields.Integer,
     'name': fields.String,
@@ -92,3 +94,5 @@ class ServiceProfessionalResumeAPI(Resource):
 api.add_resource(ServiceProfessionalAPI, '/admin/application/<int:service_professional_id>')
 api.add_resource(ServiceProfessionalStatusAPI, '/admin/application/<int:service_professional_id>/status')
 api.add_resource(ServiceProfessionalResumeAPI, '/admin/application/<int:service_professional_id>/resume')
+
+

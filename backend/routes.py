@@ -208,6 +208,13 @@ def register_service_professional():
         app.logger.error(f"Error creating service professional user: {e}")
         return jsonify({'message': 'Error creating service professional user'}), 500
     
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+# Admin Routes
+    
 @app.route('/admin/applications', methods=['GET'])
 @admin_required
 @auth_required('token')
@@ -234,6 +241,7 @@ def get_pending_applications():
     ]
 
     return jsonify(applications), 200
+
 
 @app.route('/admin/application/<int:service_professional_id>/resume', methods=['GET'])
 @auth_required('token')
