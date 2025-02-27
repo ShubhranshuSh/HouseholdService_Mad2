@@ -1,5 +1,6 @@
 import AdminNavbar from "../components/AdminNavbar.js";
 import ApplicationCard from "../components/ApplicationCard.js";
+import store from "../utils/store.js";
 
 export default {
     components: {
@@ -37,10 +38,18 @@ export default {
     </div>
     `,
     async mounted() {
+        // Check user authentication and role
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || user.role !== "admin") {
+            alert("Unauthorized access. Redirecting to login.");
+            this.$router.push("/login");
+            return;
+        }
+        
         try {
             const response = await fetch('/admin/applications', {
                 headers: {
-                    'Authentication-Token': this.$store.state.auth_token
+                    'Authentication-Token': user.token
                 }
             });
 

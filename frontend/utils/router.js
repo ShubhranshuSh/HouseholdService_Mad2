@@ -6,20 +6,25 @@ import ProfessionalRegister from "../pages/ProfessionalRegister.js";
 import AdminHome from "../pages/AdminHome.js";
 import AdminApplication from "../pages/AdminApplication.js";
 import ProfessionalDetailApp from "../components/ProfessionalDetailApp.js";
-
+import AdminDashboard from "../pages/AdminDashboard.js";
+import AdminCustomerPage from "../pages/AdminCustomerPage.js";
+import AdminProfPage from "../pages/AdminProfPage.js";
+import AdminServicePage from "../pages/AdminServicePage.js";
 
 // Mapping of routes to components
 const routes = [
     { path: '/', component: Home },
     { path: '/login', component: LoginPage },
-    {path: '/register', component: RegisterPage},
-    {path: '/register/customer', component: CustomerRegister},
-    {path: '/register/professional', component: ProfessionalRegister},
-    {path: '/admin/home', component: AdminHome},
+    { path: '/register', component: RegisterPage },
+    { path: '/register/customer', component: CustomerRegister },
+    { path: '/register/professional', component: ProfessionalRegister },
+    { path: '/admin/home', component: AdminHome },
     { path: '/admin/application', component: AdminApplication },
-    { path: '/admin/application/:id', component: ProfessionalDetailApp }
-
-    // You can add the Register route later if needed
+    { path: '/admin/application/:id', component: ProfessionalDetailApp },
+    { path: '/admin/dashboard', component: AdminDashboard },
+    { path: '/admin/customers', component: AdminCustomerPage },
+    { path: '/admin/professionals', component: AdminProfPage },
+    { path: '/admin/services', component: AdminServicePage }
 ];
 
 // Create a new VueRouter instance

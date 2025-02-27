@@ -36,8 +36,8 @@ export default {
   `,
   data() {
     return {
-      email: null,
-      password: null,
+      email: '',
+      password: '',
       isSubmitting: false,
     };
   },
@@ -60,12 +60,21 @@ export default {
   
         if (res.ok) {
           const data = await res.json();
-          // Use Vuex action to login and store user data
-          this.$store.dispatch('login', data);
-          alert("Login successful!");
+
+          // Save user data persistently
+          localStorage.setItem("user", JSON.stringify(data));
   
-          // Use the `redirect_url` from the response to navigate
-          this.$router.push(data.redirect_url);
+          // Update Vuex store
+          store.commit('setUser');
+
+          alert("Login successful!");
+
+          // Navigate based on role and redirect_url
+          if (data.redirect_url) {
+            this.$router.push(data.redirect_url);
+          } else {
+            alert("Unexpected role. Please contact support.");
+          }
         } else {
           const errorData = await res.json();
           alert(errorData.message || "Invalid login credentials.");

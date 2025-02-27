@@ -63,7 +63,7 @@ def login():
         return jsonify({'message': 'User not found'}), 404
 
     if not user.active:
-        return jsonify({'message': 'Login failed, Contact Admin'}), 403
+        return jsonify({'message': 'Your Account Has Been Suspended from Admin side.'}), 403
 
     # Service Professional validation
     if "service_professional" in [role.name for role in user.roles]:
@@ -71,19 +71,21 @@ def login():
             return jsonify({'message': 'Your Application Status is Under Process'}), 403
         elif user.accepted == "No":
             return jsonify({'message': 'Your Application got Rejected'}), 403
+        elif user.accepted == "Yes" and not user.active:
+            return jsonify({'message': 'Your Account Has Been Suspended from Admin side.'}), 403
         elif user.accepted == "Yes":
             redirect_path = '/service_professional/profile'  # Redirecting to profile page
 
     if verify_password(password, user.password):
         login_user(user)
 
-        role = [role.name for role in user.roles]
+        role = user.roles[0].name if user.roles else None  # Fix: Return single role as string
 
-        if 'admin' in role:
+        if role == 'admin':
             redirect_path = '/admin/home'
-        elif 'service_professional' in role and user.accepted == "Yes":
+        elif role == 'service_professional' and user.accepted == "Yes":
             redirect_path = '/service_professional/profile'  # Ensure profile redirection
-        elif 'customer' in role:
+        elif role == 'customer':
             redirect_path = '/customer/home'
         else:
             redirect_path = '/'
@@ -91,12 +93,14 @@ def login():
         return jsonify({
             'token': user.get_auth_token(),
             'email': user.email,
-            'role': role,
+            'role': role,  # Now a string, not a list
             'id': user.id,
             'redirect_url': redirect_path
         }), 200
 
     return jsonify({'message': 'Incorrect password'}), 400
+
+
 
 
 # Register routes
@@ -264,3 +268,85 @@ def get_resume(service_professional_id):
     except Exception as e:
         app.logger.error(f"Error sending resume file: {e}")
         abort(500)
+
+
+
+@app.route('/admin/dashboard', methods=['GET'])
+@admin_required
+@auth_required('token')
+def admin_dashboard():
+    """Fetch admin details for the dashboard"""
+    admin = User.query.filter(User.roles.any(name="admin")).first()
+    
+    if not admin:
+        return jsonify({"message": "Admin not found"}), 404
+
+    return jsonify({
+        "id": admin.id,
+        "email": admin.email,
+        "name": admin.name,
+        "phone": admin.phone,
+        "address": admin.address,
+        "pincode": admin.pincode
+    }), 200
+
+
+@app.route('/admin/service-professionals', methods=['GET'])
+@admin_required
+@auth_required('token')
+def get_service_professionals():
+    """Fetch all approved service professionals (Accepted = 'Yes')"""
+    professionals = User.query.filter(
+        User.roles.any(name="service_professional"),
+        User.accepted == "Yes"
+    ).all()
+
+    if not professionals:
+        return jsonify({"message": "No approved service professionals found"}), 404
+
+    professionals_list = [
+        {
+            "id": pro.id,
+            "name": pro.name,
+            "email": pro.email,
+            "phone": pro.phone,
+            "address": pro.address,
+            "pincode": pro.pincode,
+            "experience": pro.experience,
+            "resume": pro.resume,
+            "service_category": pro.service_category
+        }
+        for pro in professionals
+    ]
+
+    return jsonify(professionals_list), 200
+
+
+
+
+
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Service Professional Routes
+
+@app.route('/service_professional/profile/<int:user_id>', methods=['GET'])
+@auth_required('token')  # Ensures the user is logged in
+@service_professional_required  # Ensures only service professionals can access
+def service_professional_profile(user_id):
+    if not current_user.is_authenticated:
+        return jsonify({'message': 'Login required', 'redirect_url': '/login'}), 401  # Redirect info
+
+    # Check if the logged-in user is accessing their own profile
+    if current_user.id != user_id:
+        return jsonify({'message': 'Access Denied: You can only access your own profile'}), 403
+
+    return jsonify({
+        'message': 'Welcome to your profile',
+        'id': current_user.id,  # Adding ID
+        'name': current_user.name,
+        'email': current_user.email,
+        'phone': current_user.phone,
+        'service_category': current_user.service_category,
+        'experience': current_user.experience
+    }), 200
