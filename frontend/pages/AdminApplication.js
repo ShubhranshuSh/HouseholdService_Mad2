@@ -14,6 +14,12 @@ export default {
             error: null
         };
     },
+    beforeCreate() {
+        if (!store.state.loggedIn || store.state.role !== "admin") {
+            alert("🚨 Only Admin can Access this Page");
+            this.$router.push("/login");
+        }
+    },
     template: `
     <div>
         <AdminNavbar />
@@ -32,37 +38,43 @@ export default {
                     v-for="app in applications" 
                     :key="app.id" 
                     :application="app"
+                    @application-updated="fetchApplications"
                 />
             </div>
         </div>
     </div>
     `,
     async mounted() {
-        // Check user authentication and role
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || user.role !== "admin") {
-            alert("Unauthorized access. Redirecting to login.");
-            this.$router.push("/login");
-            return;
-        }
-        
-        try {
-            const response = await fetch('/admin/applications', {
-                headers: {
-                    'Authentication-Token': user.token
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        this.fetchApplications();
+    },
+    methods: {
+        async fetchApplications() {
+            this.loading = true;
+            this.error = null;
+            const token = store.state.auth_token;
+            if (!token) {
+                this.error = "Authentication token is missing. Please log in again.";
+                this.loading = false;
+                return;
             }
-
-            this.applications = await response.json();
-        } catch (err) {
-            console.error('Error:', err);
-            this.error = `Failed to fetch applications: ${err.message}`;
-        } finally {
-            this.loading = false;
+            try {
+                const response = await fetch('/admin/applications', {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authentication-Token": token
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                this.applications = await response.json();
+            } catch (err) {
+                console.error("Error:", err);
+                this.error = `Failed to fetch applications: ${err.message}`;
+            } finally {
+                this.loading = false;
+            }
         }
     }
 };

@@ -223,6 +223,15 @@ def register_service_professional():
 @admin_required
 @auth_required('token')
 def get_pending_applications():
+    # Debugging: Check received auth token
+    print(f"Auth Header Received: {request.headers.get('Authentication-Token')}")
+
+    if not current_user.is_authenticated:
+        return jsonify({'message': 'User not authenticated'}), 401
+
+    if 'admin' not in [role.name for role in current_user.roles]:
+        return jsonify({'message': 'Forbidden: Not an admin'}), 403
+
     pending_professionals = User.query.join(User.roles).filter(
         Role.name == 'service_professional',
         User.accepted == "Pending"
@@ -245,6 +254,7 @@ def get_pending_applications():
     ]
 
     return jsonify(applications), 200
+
 
 
 @app.route('/admin/application/<int:service_professional_id>/resume', methods=['GET'])
@@ -295,14 +305,16 @@ def admin_dashboard():
 @admin_required
 @auth_required('token')
 def get_service_professionals():
-    """Fetch all approved service professionals (Accepted = 'Yes')"""
+    """Fetch only active service professionals (Accepted = 'Yes' and Active = True)."""
+    
     professionals = User.query.filter(
         User.roles.any(name="service_professional"),
-        User.accepted == "Yes"
+        User.accepted == "Yes",
+        User.active == True  # Fetch only active professionals
     ).all()
 
     if not professionals:
-        return jsonify({"message": "No approved service professionals found"}), 404
+        return jsonify({"message": "No active service professionals found"}), 404
 
     professionals_list = [
         {
@@ -320,6 +332,129 @@ def get_service_professionals():
     ]
 
     return jsonify(professionals_list), 200
+
+
+@app.route('/admin/unflag-professional/<int:user_id>', methods=['POST'])
+@admin_required
+@auth_required('token')
+def unflag_service_professional(user_id):
+    """Admin can unflag (reactivate) a flagged service professional (Active = False → True)."""
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Ensure the user is a flagged service professional
+    if "service_professional" not in [role.name for role in user.roles] or user.accepted != "Yes":
+        return jsonify({"message": "User is not an approved service professional"}), 400
+
+    if user.active:  # If already active, prevent unflagging
+        return jsonify({"message": "User is already active"}), 400
+
+    # Unflag the user (Reactivate)
+    user.active = True
+    db.session.commit()
+
+    return jsonify({"message": f"Service Professional {user.name} has been unflagged (reactivated)."}), 200
+
+
+
+@app.route('/admin/flag-professional/<int:user_id>', methods=['POST'])
+@admin_required
+@auth_required('token')
+def flag_service_professional(user_id):
+    """Admin can flag (suspend) a service professional by setting active=False"""
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Check if the user is a service professional and is accepted
+    if "service_professional" not in [role.name for role in user.roles] or user.accepted != "Yes":
+        return jsonify({"message": "User is not an approved service professional"}), 400
+
+    # Flag the user (Suspend)
+    user.active = False
+    db.session.commit()
+
+    return jsonify({"message": f"Service Professional {user.name} has been flagged (suspended)."}), 200
+
+
+
+
+@app.route('/admin/customers', methods=['GET'])
+@admin_required
+@auth_required('token')
+def get_customers():
+    """Fetch only active customers (Active = True)."""
+    
+    customers = User.query.filter(
+        User.roles.any(name="customer"),
+        User.active == True  # Fetch only active customers
+    ).all()
+
+    if not customers:
+        return jsonify({"message": "No active customers found"}), 404
+
+    customers_list = [
+        {
+            "id": cust.id,
+            "name": cust.name,
+            "email": cust.email,
+            "phone": cust.phone,
+            "address": cust.address,
+            "pincode": cust.pincode
+        }
+        for cust in customers
+    ]
+
+    return jsonify(customers_list), 200
+
+
+@app.route('/admin/unflag-customer/<int:user_id>', methods=['POST'])
+@admin_required
+@auth_required('token')
+def unflag_customer(user_id):
+    """Admin can unflag (reactivate) a flagged customer (Active = False → True)."""
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Ensure the user is a flagged customer
+    if "customer" not in [role.name for role in user.roles]:
+        return jsonify({"message": "User is not a customer"}), 400
+
+    if user.active:  # If already active, prevent unflagging
+        return jsonify({"message": "User is already active"}), 400
+
+    # Unflag the user (Reactivate)
+    user.active = True
+    db.session.commit()
+
+    return jsonify({"message": f"Customer {user.name} has been unflagged (reactivated)."}), 200
+
+
+@app.route('/admin/flag-customer/<int:user_id>', methods=['POST'])
+@admin_required
+@auth_required('token')
+def flag_customer(user_id):
+    """Admin can flag (suspend) a customer by setting active=False."""
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Check if the user is a customer
+    if "customer" not in [role.name for role in user.roles]:
+        return jsonify({"message": "User is not a registered customer"}), 400
+
+    # Flag the user (Suspend)
+    user.active = False
+    db.session.commit()
+
+    return jsonify({"message": f"Customer {user.name} has been flagged (suspended)."}), 200
+
 
 
 

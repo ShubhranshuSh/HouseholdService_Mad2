@@ -4,7 +4,9 @@ export default {
     <div class="card shadow-lg p-4 mb-4 border-0 rounded-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0 fw-bold">
-                <router-link :to="'/admin/application/' + application.id" class="text-dark text-decoration-none">{{ application.name }}</router-link>
+                <router-link :to="'/admin/application/' + application.id" class="text-dark text-decoration-none">
+                    {{ application.name }}
+                </router-link>
             </h4>
             <span class="badge bg-primary fs-6">{{ application.service_category }}</span>
         </div>
@@ -45,9 +47,8 @@ export default {
                 }
 
                 const result = await response.json();
-                alert(result.message); // Show success message
-                // Optionally refresh the applications list or update the UI accordingly
-
+                alert(result.message);
+                this.$emit("application-updated"); // Emit event for parent component update
             } catch (error) {
                 console.error('Error:', error);
                 alert(`Failed to update application status: ${error.message}`);
@@ -60,14 +61,9 @@ export default {
     computed: {
         formattedDate() {
             if (!this.application.date_applied) return "Invalid Date"; 
-
             const date = new Date(this.application.date_applied);
-            if (isNaN(date.getTime())) return "Invalid Date";
-
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+            return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
             });
         }
     }
