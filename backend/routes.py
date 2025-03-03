@@ -305,6 +305,7 @@ def admin_dashboard():
 @admin_required
 @auth_required('token')
 def get_service_professionals():
+    
     """Fetch only active service professionals (Accepted = 'Yes' and Active = True)."""
     
     professionals = User.query.filter(

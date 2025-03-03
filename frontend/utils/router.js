@@ -23,7 +23,7 @@ const routes = [
     { path: '/admin/application/:id', component: ProfessionalDetailApp },
     { path: '/admin/dashboard', component: AdminDashboard },
     { path: '/admin/customers', component: AdminCustomerPage },
-    { path: '/admin/professionals', component: AdminProfPage },
+    { path: '/admin/service-professionals', component: AdminProfPage },
     { path: '/admin/services', component: AdminServicePage }
 ];
 
