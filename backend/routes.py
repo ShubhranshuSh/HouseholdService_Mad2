@@ -380,6 +380,39 @@ def flag_service_professional(user_id):
 
     return jsonify({"message": f"Service Professional {user.name} has been flagged (suspended)."}), 200
 
+@app.route('/admin/flagged-service-professionals', methods=['GET'])
+@admin_required
+@auth_required('token')
+def get_flagged_service_professionals():
+    """Fetch all flagged (inactive) service professionals (Accepted = 'Yes' and Active = False)."""
+
+    professionals = User.query.filter(
+        User.roles.any(name="service_professional"),
+        User.accepted == "Yes",
+        User.active == False  # Fetch only flagged (inactive) professionals
+    ).all()
+
+    if not professionals:
+        return jsonify({"message": "No flagged service professionals found"}), 404
+
+    professionals_list = [
+        {
+            "id": pro.id,
+            "name": pro.name,
+            "email": pro.email,
+            "phone": pro.phone,
+            "address": pro.address,
+            "pincode": pro.pincode,
+            "experience": pro.experience,
+            "resume": pro.resume,
+            "service_category": pro.service_category
+        }
+        for pro in professionals
+    ]
+
+    return jsonify(professionals_list), 200
+
+
 
 
 
