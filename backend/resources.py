@@ -19,15 +19,7 @@ service_professional_fields = {
     'service_category': fields.String,
 }
 
-service_fields = {
-    'id': fields.Integer,
-    'name': fields.String,
-    'price': fields.Integer,
-    'timing': fields.String,
-    'description': fields.String,
-    'service_category': fields.String,
-    'user_id': fields.Integer
-}
+
 
 def admin_required(func):
     @wraps(func)
@@ -83,6 +75,18 @@ class ServiceProfessionalResumeAPI(Resource):
             abort(404, description="Resume file not found")
 
         return send_file(service_professional.resume, mimetype='application/pdf')
+    
+# ----------------- Service API -----------------
+
+service_fields = {
+    'id': fields.Integer,
+    'name': fields.String,
+    'price': fields.Integer,
+    'timing': fields.String,
+    'description': fields.String,
+    'service_category': fields.String,
+    'user_id': fields.Integer
+}
 
 class ServiceAPI(Resource):
     @marshal_with(service_fields)
