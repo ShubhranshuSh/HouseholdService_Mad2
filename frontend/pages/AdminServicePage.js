@@ -27,7 +27,7 @@ export default {
         <div class="container mt-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="text-center">Admin - Services</h1>
-                <button class="btn btn-success">
+                <button class="btn btn-success" @click="$router.push('/admin/services/add')">
                     <i class="fas fa-plus"></i> Add Service
                 </button>
             </div>

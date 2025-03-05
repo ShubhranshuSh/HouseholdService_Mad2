@@ -137,8 +137,9 @@ class ServiceListAPI(Resource):
         db.session.commit()
         return {"message": "Service created successfully"}, 201
 
+api.add_resource(ServiceAPI, '/services/<int:service_id>')
+api.add_resource(ServiceListAPI, '/services')
 api.add_resource(ServiceProfessionalAPI, '/admin/application/<int:service_professional_id>')
 api.add_resource(ServiceProfessionalStatusAPI, '/admin/application/<int:service_professional_id>/status')
 api.add_resource(ServiceProfessionalResumeAPI, '/admin/application/<int:service_professional_id>/resume')
-api.add_resource(ServiceAPI, '/services/<int:service_id>')
-api.add_resource(ServiceListAPI, '/services')
+
