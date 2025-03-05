@@ -489,6 +489,35 @@ def flag_customer(user_id):
 
     return jsonify({"message": f"Customer {user.name} has been flagged (suspended)."}), 200
 
+@app.route('/admin/flagged-customers', methods=['GET'])
+@admin_required
+@auth_required('token')
+def get_flagged_customers():
+    """Fetch all flagged (inactive) customers (Active = False)."""
+
+    customers = User.query.filter(
+        User.roles.any(name="customer"),
+        User.active == False  # Fetch only flagged customers
+    ).all()
+
+    if not customers:
+        return jsonify({"message": "No flagged customers found"}), 404
+
+    customers_list = [
+        {
+            "id": cust.id,
+            "name": cust.name,
+            "email": cust.email,
+            "phone": cust.phone,
+            "address": cust.address,
+            "pincode": cust.pincode
+        }
+        for cust in customers
+    ]
+
+    return jsonify(customers_list), 200
+
+
 
 
 

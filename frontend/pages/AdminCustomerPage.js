@@ -1,20 +1,19 @@
 import AdminNavbar from "../components/AdminNavbar.js";
 import store from "../utils/store.js";
-
 export default {
     components: {
         AdminNavbar,
     },
     data() {
         return {
-            customers: [
-                { id: 1, name: "Emma Johnson", city: "New York", address: "123 Main Street", phone: "123-456-7890", flagged: false },
-                { id: 2, name: "James Smith", city: "Los Angeles", address: "456 Elm Avenue", phone: "987-654-3210", flagged: false },
-                { id: 3, name: "Olivia Brown", city: "Chicago", address: "789 Oak Drive", phone: "555-678-1234", flagged: true },
-                { id: 4, name: "Liam Wilson", city: "Houston", address: "321 Pine Street", phone: "444-333-2222", flagged: false },
-                { id: 5, name: "Sophia Davis", city: "San Francisco", address: "654 Maple Road", phone: "111-222-3333", flagged: true }
-            ],
+            activeCustomers: [],
+            flaggedCustomers: [],
             activeTab: "active", // "active" or "flagged"
+            loading: {
+                active: true,
+                flagged: true
+            },
+            error: null
         };
     },
     beforeCreate() {
@@ -23,22 +22,128 @@ export default {
             this.$router.push("/login");
         }
     },
-    computed: {
-        activeCustomers() {
-            return this.customers.filter(customer => !customer.flagged);
-        },
-        flaggedCustomers() {
-            return this.customers.filter(customer => customer.flagged);
-        }
+    created() {
+        this.fetchActiveCustomers();
+        this.fetchFlaggedCustomers();
     },
     methods: {
+        fetchActiveCustomers() {
+            this.loading.active = true;
+            
+            fetch('/admin/customers', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': store.state.auth_token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        this.activeCustomers = [];
+                        return;
+                    }
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && Array.isArray(data)) {
+                    this.activeCustomers = data;
+                } else {
+                    this.activeCustomers = [];
+                }
+                this.loading.active = false;
+            })
+            .catch(error => {
+                console.error('Error fetching active customers:', error);
+                this.error = 'Failed to load active customers. Please try again.';
+                this.loading.active = false;
+                this.activeCustomers = [];
+            });
+        },
+        fetchFlaggedCustomers() {
+            this.loading.flagged = true;
+            
+            fetch('/admin/flagged-customers', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': store.state.auth_token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        this.flaggedCustomers = [];
+                        return;
+                    }
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && Array.isArray(data)) {
+                    this.flaggedCustomers = data;
+                } else {
+                    this.flaggedCustomers = [];
+                }
+                this.loading.flagged = false;
+            })
+            .catch(error => {
+                console.error('Error fetching flagged customers:', error);
+                this.error = 'Failed to load flagged customers. Please try again.';
+                this.loading.flagged = false;
+                this.flaggedCustomers = [];
+            });
+        },
         flagCustomer(id) {
-            const customer = this.customers.find(cust => cust.id === id);
-            if (customer) customer.flagged = true;
+            fetch(`/admin/flag-customer/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': store.state.auth_token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.activeCustomers = this.activeCustomers.filter(cust => cust.id !== id);
+                alert(data.message || 'Customer has been flagged successfully.');
+                this.fetchFlaggedCustomers();
+            })
+            .catch(error => {
+                console.error('Error flagging customer:', error);
+                alert('Failed to flag customer. Please try again.');
+            });
         },
         unflagCustomer(id) {
-            const customer = this.customers.find(cust => cust.id === id);
-            if (customer) customer.flagged = false;
+            fetch(`/admin/unflag-customer/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': store.state.auth_token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.flaggedCustomers = this.flaggedCustomers.filter(cust => cust.id !== id);
+                this.fetchActiveCustomers();
+                alert(data.message || 'Customer has been unflagged successfully.');
+            })
+            .catch(error => {
+                console.error('Error unflagging customer:', error);
+                alert('Failed to unflag customer. Please try again.');
+            });
         }
     },
     template: `
@@ -69,10 +174,22 @@ export default {
             <div class="row g-4">
                 <!-- Active Customers -->
                 <div v-if="activeTab === 'active'" class="col-12">
-                    <div v-if="activeCustomers.length === 0" class="text-center">
+                    <div v-if="loading.active" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading active customers...</p>
+                    </div>
+                    
+                    <div v-else-if="error" class="alert alert-danger text-center">
+                        {{ error }}
+                    </div>
+                    
+                    <div v-else-if="activeCustomers.length === 0" class="text-center">
                         <p class="fw-bold text-muted">No Active Customers found.</p>
                     </div>
-                    <div class="row g-4">
+                    
+                    <div v-else class="row g-4">
                         <div v-for="customer in activeCustomers" :key="customer.id" class="col-lg-4 col-md-6 col-sm-12">
                             <div class="card shadow-sm border-primary h-100">
                                 <div class="card-body text-center d-flex flex-column">
@@ -80,10 +197,10 @@ export default {
                                         <i class="fas fa-user-circle me-2 text-primary"></i> {{ customer.name }}
                                     </h5>
                                     <p class="card-text">
-                                        <i class="fas fa-map-marker-alt me-1"></i> {{ customer.city }}
+                                        <i class="fas fa-map-marker-alt me-1"></i> {{ customer.address }}, {{ customer.pincode }}
                                     </p>
                                     <p class="card-text">
-                                        <i class="fas fa-home me-1"></i> {{ customer.address }}
+                                        <i class="fas fa-envelope me-1"></i> {{ customer.email }}
                                     </p>
                                     <p class="card-text">
                                         <i class="fas fa-phone me-1"></i> {{ customer.phone }}
@@ -99,10 +216,18 @@ export default {
                 
                 <!-- Flagged Customers -->
                 <div v-if="activeTab === 'flagged'" class="col-12">
-                    <div v-if="flaggedCustomers.length === 0" class="text-center">
+                    <div v-if="loading.flagged" class="text-center py-5">
+                        <div class="spinner-border text-danger" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading flagged customers...</p>
+                    </div>
+                    
+                    <div v-else-if="flaggedCustomers.length === 0" class="text-center">
                         <p class="fw-bold text-muted">No Flagged Customers found.</p>
                     </div>
-                    <div class="row g-4">
+                    
+                    <div v-else class="row g-4">
                         <div v-for="customer in flaggedCustomers" :key="customer.id" class="col-lg-4 col-md-6 col-sm-12">
                             <div class="card shadow-sm border-danger h-100 bg-light">
                                 <div class="card-body text-center d-flex flex-column">
@@ -110,10 +235,10 @@ export default {
                                         <i class="fas fa-user-circle me-2"></i> {{ customer.name }}
                                     </h5>
                                     <p class="card-text">
-                                        <i class="fas fa-map-marker-alt me-1"></i> {{ customer.city }}
+                                        <i class="fas fa-map-marker-alt me-1"></i> {{ customer.address }}, {{ customer.pincode }}
                                     </p>
                                     <p class="card-text">
-                                        <i class="fas fa-home me-1"></i> {{ customer.address }}
+                                        <i class="fas fa-envelope me-1"></i> {{ customer.email }}
                                     </p>
                                     <p class="card-text">
                                         <i class="fas fa-phone me-1"></i> {{ customer.phone }}
