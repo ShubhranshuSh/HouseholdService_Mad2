@@ -99,7 +99,7 @@ export default {
                                 <strong>Category:</strong> {{ service.service_category }} <br>
                             </p>
                             <div class="d-flex justify-content-end">
-                                <button class="btn btn-primary btn-sm me-2">
+                                <button class="btn btn-primary btn-sm me-2" @click="$router.push('/admin/services/edit/' + service.id)">
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
                                 <button class="btn btn-danger btn-sm">

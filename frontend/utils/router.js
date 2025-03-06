@@ -11,6 +11,7 @@ import AdminCustomerPage from "../pages/AdminCustomerPage.js";
 import AdminProfPage from "../pages/AdminProfPage.js";
 import AdminServicePage from "../pages/AdminServicePage.js";
 import AdminServiceAdd from "../pages/AdminServiceAdd.js";
+import AdminServiceEdit from "../pages/AdminServiceEdit.js";
 
 // Mapping of routes to components
 const routes = [
@@ -26,7 +27,8 @@ const routes = [
     { path: '/admin/customers', component: AdminCustomerPage },
     { path: '/admin/service-professionals', component: AdminProfPage },
     { path: '/admin/services', component: AdminServicePage },
-    {path: '/admin/services/add', component: AdminServiceAdd}
+    {path: '/admin/services/add', component: AdminServiceAdd},
+    {path: '/admin/services/edit/:id', component: AdminServiceEdit}
 ];
 
 // Create a new VueRouter instance
