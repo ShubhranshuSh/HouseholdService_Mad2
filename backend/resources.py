@@ -92,10 +92,11 @@ class ServiceAPI(Resource):
     @marshal_with(service_fields)
     @auth_required('token')
     def get(self, service_id):
+        """Fetch details of a specific service by ID."""
         service = Service.query.get(service_id)
         if not service:
             return {"message": "Service not found"}, 404
-        return service
+        return service, 200
 
     @auth_required('token')
     def put(self, service_id):
@@ -121,11 +122,6 @@ class ServiceAPI(Resource):
         return {"message": "Service deleted successfully"}, 200
 
 class ServiceListAPI(Resource):
-    @marshal_with(service_fields)
-    @auth_required('token')
-    def get(self):
-        return Service.query.all()
-
     @auth_required('token')
     def post(self):
         data = request.get_json()
@@ -137,8 +133,11 @@ class ServiceListAPI(Resource):
         db.session.commit()
         return {"message": "Service created successfully"}, 201
 
-api.add_resource(ServiceAPI, '/services/<int:service_id>')
-api.add_resource(ServiceListAPI, '/services')
+
+# Register API routes
+api.add_resource(ServiceAPI, '/services/<int:service_id>')  # Fetch specific service
+api.add_resource(ServiceListAPI, '/services')  # Handle service creation only
+
 api.add_resource(ServiceProfessionalAPI, '/admin/application/<int:service_professional_id>')
 api.add_resource(ServiceProfessionalStatusAPI, '/admin/application/<int:service_professional_id>/status')
 api.add_resource(ServiceProfessionalResumeAPI, '/admin/application/<int:service_professional_id>/resume')

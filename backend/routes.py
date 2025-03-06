@@ -2,7 +2,7 @@ from functools import wraps
 import os
 from flask import current_app as app, jsonify, request, render_template , abort, send_file
 from flask_security import auth_required, verify_password, hash_password, login_required, current_user, logout_user, login_user
-from backend.models import db, User, Role
+from backend.models import Service, db, User, Role
 
 datastore = app.security.datastore
 
@@ -516,6 +516,36 @@ def get_flagged_customers():
     ]
 
     return jsonify(customers_list), 200
+
+
+@app.route('/admin/services', methods=['GET'])
+@admin_required
+@auth_required('token')
+def get_admin_services():
+    """Fetch only services created by admin users."""
+
+    # Fetch only services where the user (creator) has an "admin" role
+    services = Service.query.join(User).filter(User.roles.any(name="admin")).all()
+
+    if not services:
+        return jsonify({"message": "No services found"}), 404
+
+    services_list = [
+        {
+            "id": service.id,
+            "name": service.name,
+            "price": service.price,
+            "timing": service.timing,
+            "description": service.description,
+            "service_category": service.service_category,
+            "user_id": service.user_id
+        }
+        for service in services
+    ]
+
+    return jsonify(services_list), 200
+
+
 
 
 

@@ -7,18 +7,56 @@ export default {
     },
     data() {
         return {
-            services: [
-                { id: 1, name: "House Cleaning", rate: "$30/hr", timings: "9 AM - 6 PM", city: "New York" },
-                { id: 2, name: "Plumbing Work", rate: "$50/hr", timings: "8 AM - 5 PM", city: "Los Angeles" },
-                { id: 3, name: "AC Repair", rate: "$40/hr", timings: "10 AM - 7 PM", city: "Chicago" },
-                { id: 4, name: "Electrician Services", rate: "$35/hr", timings: "7 AM - 4 PM", city: "Houston" },
-            ],
+            services: [],
+            loading: true,
+            error: null
         };
     },
     beforeCreate() {
         if (!store.state.loggedIn || store.state.role !== "admin") {
             alert("🚨 Only Admin can Access this Page");
             this.$router.push("/login");
+        }
+    },
+    created() {
+        this.fetchServices();
+    },
+    methods: {
+        fetchServices() {
+            this.loading = true;
+            
+            fetch('/admin/services', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': store.state.auth_token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        this.services = [];
+                        return;
+                    }
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data); // Debugging API response
+                if (data && Array.isArray(data)) {
+                    this.services = data;
+                } else {
+                    this.services = [];
+                }
+                this.loading = false;
+            })
+            .catch(error => {
+                console.error('Error fetching services:', error);
+                this.error = 'Failed to load services. Please try again.';
+                this.loading = false;
+                this.services = [];
+            });
         }
     },
     template: `
@@ -32,17 +70,33 @@ export default {
                 </button>
             </div>
             
-            <div class="row">
-                <div v-for="service in services" :key="service.id" class="col-md-6 col-lg-4 mb-4">
-                    <div class="card shadow-sm p-3">
+            <div v-if="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2">Loading services...</p>
+            </div>
+            
+            <div v-else-if="error" class="alert alert-danger text-center">
+                {{ error }}
+            </div>
+            
+            <div v-else-if="services.length === 0" class="text-center">
+                <p class="fw-bold text-muted">No Services found.</p>
+            </div>
+            
+            <div v-else class="row g-4">
+                <div v-for="service in services" :key="service.id" class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="card shadow-sm border-primary h-100">
                         <div class="card-body">
                             <h5 class="card-title">
                                 <i class="fas fa-tools"></i> {{ service.name }}
                             </h5>
                             <p class="card-text">
-                                <strong>Rate:</strong> {{ service.rate }} <br>
-                                <strong>Timings:</strong> {{ service.timings }} <br>
-                                <strong>City:</strong> {{ service.city }}
+                                <strong>Rate:</strong> {{ service.price }} <br>
+                                <strong>Timings:</strong> {{ service.timing }} <br>
+                                <strong>Description:</strong> {{ service.description }} <br>
+                                <strong>Category:</strong> {{ service.service_category }} <br>
                             </p>
                             <div class="d-flex justify-content-end">
                                 <button class="btn btn-primary btn-sm me-2">
@@ -58,5 +112,5 @@ export default {
             </div>
         </div>
     </div>
-    `,
+    `
 };
