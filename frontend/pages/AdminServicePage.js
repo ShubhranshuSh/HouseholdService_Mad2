@@ -57,6 +57,34 @@ export default {
                 this.loading = false;
                 this.services = [];
             });
+        },
+        deleteService(serviceId) {
+            if (confirm("Are you sure you want to delete this service? This action cannot be undone.")) {
+                fetch(`/api/services/${serviceId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authentication-Token": store.state.auth_token
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || `HTTP error! Status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert("✅ Service deleted successfully!");
+                    // Remove the deleted service from the services array
+                    this.services = this.services.filter(service => service.id !== serviceId);
+                })
+                .catch(error => {
+                    console.error("Error deleting service:", error);
+                    alert("Failed to delete service: " + error.message);
+                });
+            }
         }
     },
     template: `
@@ -102,7 +130,7 @@ export default {
                                 <button class="btn btn-primary btn-sm me-2" @click="$router.push('/admin/services/edit/' + service.id)">
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
-                                <button class="btn btn-danger btn-sm">
+                                <button class="btn btn-danger btn-sm" @click="deleteService(service.id)">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
