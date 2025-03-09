@@ -12,6 +12,7 @@ import AdminProfPage from "../pages/AdminProfPage.js";
 import AdminServicePage from "../pages/AdminServicePage.js";
 import AdminServiceAdd from "../pages/AdminServiceAdd.js";
 import AdminServiceEdit from "../pages/AdminServiceEdit.js";
+import ProfessionalDashboard from "../pages/ProfessionalDashboard.js";
 
 // Mapping of routes to components
 const routes = [
@@ -28,7 +29,8 @@ const routes = [
     { path: '/admin/service-professionals', component: AdminProfPage },
     { path: '/admin/services', component: AdminServicePage },
     {path: '/admin/services/add', component: AdminServiceAdd},
-    {path: '/admin/services/edit/:id', component: AdminServiceEdit}
+    {path: '/admin/services/edit/:id', component: AdminServiceEdit},
+    {path: '/service_professional/dashboard/:id', component: ProfessionalDashboard}
 ];
 
 // Create a new VueRouter instance

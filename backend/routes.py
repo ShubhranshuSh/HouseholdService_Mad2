@@ -82,9 +82,9 @@ def login():
         role = user.roles[0].name if user.roles else None  # Fix: Return single role as string
 
         if role == 'admin':
-            redirect_path = '/admin/home'
+            redirect_path = '/admin/dashboard'
         elif role == 'service_professional' and user.accepted == "Yes":
-            redirect_path = '/service_professional/profile'  # Ensure profile redirection
+            redirect_path = f'/service_professional/dashboard/{user.id}'  # Ensure profile redirection
         elif role == 'customer':
             redirect_path = '/customer/home'
         else:
@@ -558,10 +558,10 @@ def get_admin_services():
 
 # Service Professional Routes
 
-@app.route('/service_professional/profile/<int:user_id>', methods=['GET'])
+@app.route('/service_professional/dashboard/<int:user_id>', methods=['GET'])
 @auth_required('token')  # Ensures the user is logged in
 @service_professional_required  # Ensures only service professionals can access
-def service_professional_profile(user_id):
+def service_professional_dashboard(user_id):
     if not current_user.is_authenticated:
         return jsonify({'message': 'Login required', 'redirect_url': '/login'}), 401  # Redirect info
 
