@@ -17,7 +17,7 @@ export default {
     }
   },
   template: `
-    <nav class="navbar navbar-expand-lg" style="background-color: #7952b3;">
+    <nav class="navbar navbar-expand-lg" style="background-color: #0D6EFD;">
       <div class="container-fluid">
         <!-- Logo -->
         <a class="navbar-brand" href="#/service_professional/home" style="font-weight: bold; color: white;">
