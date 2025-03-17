@@ -595,13 +595,6 @@ def service_professional_dashboard(user_id):
 @auth_required('token')  # Ensures the user is logged in
 @customer_required  # Ensures only customers can access
 def customer_dashboard(user_id):
-    if not current_user.is_authenticated:
-        return jsonify({'message': 'Login required', 'redirect_url': '/login'}), 401  # Redirect info
-
-    # Check if the logged-in user is accessing their own profile
-    if current_user.id != user_id:
-        return jsonify({'message': 'Access Denied: You can only access your own profile'}), 403
-
     return jsonify({
         'message': 'Welcome to your profile',
         'id': current_user.id,  # Adding ID
@@ -611,3 +604,10 @@ def customer_dashboard(user_id):
         'address': current_user.address,
         'pincode': current_user.pincode  # Added pincode field
     }), 200
+
+
+@app.route('/customer/home', methods=['GET'])
+@auth_required('token')  # Ensures the user is logged in
+@customer_required  # Ensures only customers can access
+def customer_home():
+    return jsonify({'message': 'Welcome to Customer Home Page'}), 200

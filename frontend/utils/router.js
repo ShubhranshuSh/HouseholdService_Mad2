@@ -14,6 +14,7 @@ import AdminServiceAdd from "../pages/AdminServiceAdd.js";
 import AdminServiceEdit from "../pages/AdminServiceEdit.js";
 import ProfessionalDashboard from "../pages/ProfessionalDashboard.js";
 import CustomerDashboard from "../pages/CustomerDashboard.js";
+import CustomerHome from "../pages/CustomerHome.js";
 
 // Mapping of routes to components
 const routes = [
@@ -32,7 +33,8 @@ const routes = [
     {path: '/admin/services/add', component: AdminServiceAdd},
     {path: '/admin/services/edit/:id', component: AdminServiceEdit},
     {path: '/service_professional/dashboard/:id', component: ProfessionalDashboard},
-    {path: '/customer/dashboard/:id', component: CustomerDashboard}
+    {path: '/customer/dashboard/:id', component: CustomerDashboard},
+    {path: '/customer/home', component: CustomerHome}
 ];
 
 // Create a new VueRouter instance
