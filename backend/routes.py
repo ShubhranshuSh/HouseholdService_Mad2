@@ -86,7 +86,7 @@ def login():
         elif role == 'service_professional' and user.accepted == "Yes":
             redirect_path = f'/service_professional/dashboard/{user.id}'  # Ensure profile redirection
         elif role == 'customer':
-            redirect_path = '/customer/home'
+            redirect_path = f'/customer/dashboard/{user.id}'  # Ensure profile redirection
         else:
             redirect_path = '/'
 
@@ -577,4 +577,37 @@ def service_professional_dashboard(user_id):
         'phone': current_user.phone,
         'service_category': current_user.service_category,
         'experience': current_user.experience
+    }), 200
+
+
+
+
+
+
+
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Customer Routes
+
+
+@app.route('/customer/dashboard/<int:user_id>', methods=['GET'])
+@auth_required('token')  # Ensures the user is logged in
+@customer_required  # Ensures only customers can access
+def customer_dashboard(user_id):
+    if not current_user.is_authenticated:
+        return jsonify({'message': 'Login required', 'redirect_url': '/login'}), 401  # Redirect info
+
+    # Check if the logged-in user is accessing their own profile
+    if current_user.id != user_id:
+        return jsonify({'message': 'Access Denied: You can only access your own profile'}), 403
+
+    return jsonify({
+        'message': 'Welcome to your profile',
+        'id': current_user.id,  # Adding ID
+        'name': current_user.name,
+        'email': current_user.email,
+        'phone': current_user.phone,
+        'address': current_user.address,
+        'pincode': current_user.pincode  # Added pincode field
     }), 200
