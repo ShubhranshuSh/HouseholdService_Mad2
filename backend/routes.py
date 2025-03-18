@@ -610,4 +610,65 @@ def customer_dashboard(user_id):
 @auth_required('token')  # Ensures the user is logged in
 @customer_required  # Ensures only customers can access
 def customer_home():
-    return jsonify({'message': 'Welcome to Customer Home Page'}), 200
+    try:
+        # Fetch services along with provider details using JOIN
+        services = db.session.query(
+            Service.id,
+            Service.name.label('service_name'),
+            Service.price,
+            Service.timing,
+            Service.service_category,
+            User.name.label('service_provider')
+        ).join(User, Service.user_id == User.id).all()
+
+        # Check if services exist
+        if not services:
+            return jsonify({'message': 'No services available'}), 404
+
+        # Convert the query result into a list of dictionaries
+        service_list = [
+            {
+                'id': service.id,
+                'service_name': service.service_name,
+                'price': service.price,
+                'timing': service.timing,
+                'service_category': service.service_category,
+                'service_provider': service.service_provider
+            }
+            for service in services
+        ]
+
+        # Return the service details as JSON
+        return jsonify({'services': service_list}), 200
+
+    except Exception as e:
+        print(f"Error fetching services: {str(e)}")
+        return jsonify({'message': 'Failed to fetch services', 'error': str(e)}), 500
+
+@app.route('/customer/service/<int:service_id>', methods=['GET'])
+@auth_required('token')  # Ensures the user is logged in
+@customer_required  # Ensures only customers can access
+def get_service_details(service_id):
+    """
+    Route to fetch the detailed information of a specific service.
+    """
+    service = Service.query.get(service_id)
+    
+    if not service:
+        return jsonify({'message': 'Service not found'}), 404
+
+    # Fetching the provider details
+    provider = User.query.get(service.user_id)
+    
+    # Constructing the detailed response
+    service_details = {
+        'id': service.id,
+        'name': service.name,
+        'price': service.price,
+        'timing': service.timing,
+        'description': service.description,
+        'service_category': service.service_category,
+        'service_provider': provider.name if provider else 'Unknown'
+    }
+
+    return jsonify(service_details), 200
