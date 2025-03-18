@@ -2,7 +2,7 @@ from functools import wraps
 import os
 from flask import current_app as app, jsonify, request, render_template , abort, send_file
 from flask_security import auth_required, verify_password, hash_password, login_required, current_user, logout_user, login_user
-from backend.models import Service, db, User, Role
+from backend.models import Service, db, User, Role , ServiceRequest , Service
 
 datastore = app.security.datastore
 

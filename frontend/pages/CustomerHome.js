@@ -1,5 +1,6 @@
 import store from "../utils/store.js";
 import CustomerNavbar from "../components/CustomerNavbar.js";
+
 export default {
     components: { CustomerNavbar },
     data() {
@@ -33,7 +34,7 @@ export default {
                 this.loading = false;
                 return;
             }
-            
+
             fetch('/customer/home', {
                 method: 'GET',
                 headers: {
@@ -68,8 +69,11 @@ export default {
             });
         },
         viewServiceDetails(serviceId) {
-            // Navigate to service detail page with the correct route
             this.$router.push(`/customer/service/${serviceId}`);
+        },
+        bookNow(serviceId) {
+            console.log("Navigating to request form for service:", serviceId);
+            this.$router.push(`/customer/service/request/${serviceId}`);
         }
     },
     template: `
@@ -106,7 +110,12 @@ export default {
                                 <strong>Provider:</strong> {{ service.service_provider }} <br>
                             </p>
                             <div class="d-flex justify-content-end">
-                                <button class="btn btn-success w-100">Book Now</button>
+                                <button 
+                                    class="btn btn-success w-100" 
+                                    @click="bookNow(service.id)"
+                                >
+                                    Book Now
+                                </button>
                             </div>
                         </div>
                     </div>

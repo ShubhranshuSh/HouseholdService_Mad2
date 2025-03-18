@@ -34,6 +34,9 @@ export default {
               <router-link class="nav-link" to="/admin/application" style="color: white; font-weight: 500;">Applications</router-link>
             </li>
             <li class="nav-item">
+              <router-link class="nav-link" to="/admin/request" style="color: white; font-weight: 500;">Requests</router-link>
+            </li>
+            <li class="nav-item">
               <router-link class="nav-link" to="/admin/dashboard" style="color: white; font-weight: 500;">Dashboard</router-link>
             </li>
           </ul>

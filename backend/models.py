@@ -41,3 +41,20 @@ class Service(db.Model):
     description = db.Column(db.String(255), nullable=True)
     service_category = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class ServiceRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    professional_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    date_of_request = db.Column(db.DateTime, nullable=False)
+    service_status = db.Column(db.String(50), nullable=False)  # e.g., requested, assigned, closed, flagged, rejected
+    remarks = db.Column(db.String(255), nullable=True)
+    time = db.Column(db.String(5), nullable=False)
+    rating = db.Column(db.Integer, nullable=True)  # Rating from customer (1-5)
+    feedback = db.Column(db.Text, nullable=True)  # Feedback from customer
+
+    # Relationships
+    service = db.relationship('Service', backref='requests')
+    customer = db.relationship('User', foreign_keys=[customer_id], backref='service_requests')
+    professional = db.relationship('User', foreign_keys=[professional_id], backref='assigned_requests')
