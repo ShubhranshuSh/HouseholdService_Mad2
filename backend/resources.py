@@ -26,6 +26,14 @@ def customer_required(func):
         return func(*args, **kwargs)
     return wrapper
 
+def service_professional_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.has_role('service_professional'):
+            return jsonify({'message': 'Access Denied: Service Professional only'}), 403
+        return func(*args, **kwargs)
+    return wrapper
+
 service_professional_fields = {
     'id': fields.Integer,
     'name': fields.String,
@@ -256,3 +264,70 @@ class CancelServiceRequestAPI(Resource):
 # ✅ Register the API routes
 api.add_resource(ServiceRequestAPI, '/customer/service/request/<int:service_id>')
 api.add_resource(CancelServiceRequestAPI, '/customer/service/request/cancel/<int:request_id>')
+
+
+# ----------------- Service Request for Service Professionals and Admin from Customer API -----------------
+
+# ✅ Fields for marshalling the response
+service_request_details_fields = {
+    'id': fields.Integer,
+    'service_name': fields.String,
+    'customer_name': fields.String,
+    'customer_email': fields.String,
+    'customer_phone': fields.String,
+    'customer_address': fields.String,
+    'date_of_request': fields.DateTime,
+    'time': fields.String,
+    'remarks': fields.String,
+    'service_status': fields.String
+}
+
+# ✅ API for fetching only pending service requests (Admin & Service Professional)
+class ServiceRequestPendingAPI(Resource):
+
+    @marshal_with(service_request_details_fields)
+    @auth_required('token')
+    def get(self):
+        """Fetch only pending service requests for Admin or Service Professional"""
+
+        service_requests = []
+
+        # ✅ Admin: Fetch all pending requests
+        if current_user.has_role('admin'):
+            service_requests = ServiceRequest.query.filter_by(service_status='requested').all()
+
+        # ✅ Service Professional: Fetch only their assigned pending requests
+        elif current_user.has_role('service_professional'):
+            service_requests = ServiceRequest.query.filter_by(
+                professional_id=current_user.id, 
+                service_status='requested'
+            ).all()
+
+        else:
+            return {'message': 'Access Denied'}, 403
+
+        # ✅ Prepare the response
+        response = []
+        for request in service_requests:
+            
+            customer = User.query.get(request.customer_id)
+            service = Service.query.get(request.service_id)
+
+            response.append({
+                'id': request.id,
+                'service_name': service.name if service else "N/A",
+                'customer_name': customer.name if customer else "Unknown",
+                'customer_email': customer.email if customer else "Unknown",
+                'customer_phone': customer.phone if customer else "N/A",
+                'customer_address': customer.address if customer else "N/A",
+                'date_of_request': request.date_of_request,
+                'time': request.time,
+                'remarks': request.remarks,
+                'service_status': request.service_status
+            })
+
+        return response, 200
+
+
+# ✅ Register the new API route
+api.add_resource(ServiceRequestPendingAPI, '/service-requests/pending')
