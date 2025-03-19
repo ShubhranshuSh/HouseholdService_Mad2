@@ -5,9 +5,26 @@ from flask_restful import Api, Resource, fields, marshal_with, reqparse
 from flask_security import auth_required
 from backend.models import User, Role, db, Service , ServiceRequest
 from datetime import datetime
-from flask import abort, send_file, request
+from flask import abort, jsonify, send_file, request
 
 api = Api(prefix='/api')
+
+
+def admin_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.has_role('admin'):
+            return {'message': 'Access Denied: Admin only'}, 403
+        return func(*args, **kwargs)
+    return wrapper
+
+def customer_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.has_role('customer'):
+            return jsonify({'message': 'Access Denied: Customer only'}), 403
+        return func(*args, **kwargs)
+    return wrapper
 
 service_professional_fields = {
     'id': fields.Integer,
@@ -22,13 +39,7 @@ service_professional_fields = {
 
 
 
-def admin_required(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if not current_user.has_role('admin'):
-            return {'message': 'Access Denied: Admin only'}, 403
-        return func(*args, **kwargs)
-    return wrapper
+
 
 class ServiceProfessionalAPI(Resource):
     @marshal_with(service_professional_fields)
@@ -148,6 +159,7 @@ api.add_resource(ServiceListAPI, '/services')  # Handle service creation only
 
 # ----------------- Service Request API -----------------
 
+# ✅ Define the fields for marshalling the response
 service_request_fields = {
     'id': fields.Integer,
     'service_id': fields.Integer,
@@ -164,6 +176,7 @@ service_request_fields = {
 class ServiceRequestAPI(Resource):
     @marshal_with(service_request_fields)
     @auth_required('token')
+    @customer_required
     def post(self, service_id):
         """Create a service request for a specific service"""
         parser = reqparse.RequestParser()
@@ -205,5 +218,41 @@ class ServiceRequestAPI(Resource):
         return new_request, 201
 
 
-# ✅ Register the new Service Request API route
+# ✅ New API route for cancelling a service request
+class CancelServiceRequestAPI(Resource):
+    @auth_required('token')
+    @customer_required
+    def delete(self, request_id):
+        """Cancel a service request by the customer"""
+        
+        # Fetch the service request
+        service_request = ServiceRequest.query.get(request_id)
+
+        if not service_request:
+            return {'message': 'Service request not found'}, 404
+
+        # Ensure the current user owns the request
+        if service_request.customer_id != current_user.id:
+            return {'message': 'Unauthorized: You can only cancel your own requests'}, 403
+
+        # Only allow cancellation if the request is pending or active
+        if service_request.service_status not in ['requested', 'assigned', 'active']:
+            return {'message': 'Only pending or active requests can be cancelled'}, 400
+
+        # Confirmation message
+        confirmation_message = "Are you sure you want to cancel this service?"
+
+        # Cancel the request
+        service_request.service_status = 'cancelled'
+        db.session.commit()
+
+        # ✅ No `jsonify()` needed here
+        return {
+            'message': 'Service request cancelled successfully',
+            'confirmation': confirmation_message
+        }, 200
+
+
+# ✅ Register the API routes
 api.add_resource(ServiceRequestAPI, '/customer/service/request/<int:service_id>')
+api.add_resource(CancelServiceRequestAPI, '/customer/service/request/cancel/<int:request_id>')

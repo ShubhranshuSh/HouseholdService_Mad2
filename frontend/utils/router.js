@@ -19,6 +19,7 @@ import CustomerServiceDetail from "../pages/CustomerServiceDetail.js";
 import ProfessionalRequest from "../pages/ProfessionalRequest.js";
 import AdminRequest from "../pages/AdminRequest.js";
 import CustomerServiceRequestForm from "../pages/CustomerServiceRequestForm.js";
+import CustomerRequestPage from "../pages/CustomerRequestPage.js";
 
 // Mapping of routes to components
 const routes = [
@@ -42,7 +43,9 @@ const routes = [
     {path: '/customer/service/:id', component: CustomerServiceDetail},
     {path: '/professional/request', component: ProfessionalRequest},
     {path: '/admin/request', component: AdminRequest},
-    {path: '/customer/service/request/:id', component: CustomerServiceRequestForm}
+    {path: '/customer/service/request/:id', component: CustomerServiceRequestForm},
+    {path: '/customer/requests', component: CustomerRequestPage}
+    
 ];
 
 // Create a new VueRouter instance

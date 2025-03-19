@@ -672,3 +672,51 @@ def get_service_details(service_id):
     }
 
     return jsonify(service_details), 200
+
+
+@app.route('/customer/requests', methods=['GET'])
+@auth_required('token')           # Ensures the user is authenticated
+@customer_required                # Ensures only customers can access
+def get_customer_requests():
+    """
+    Route to fetch all service requests for the current customer grouped by status.
+    """
+    customer_id = current_user.id
+
+    # Fetch all requests by the customer
+    requests = ServiceRequest.query.filter_by(customer_id=customer_id).all()
+
+    # Group requests by status
+    pending = []
+    active = []
+    completed = []
+    rejected = []
+
+    for req in requests:
+        service = Service.query.get(req.service_id)
+
+        request_info = {
+            'id': req.id,
+            'service_name': service.name if service else 'Unknown Service',
+            'date': req.date_of_request.strftime('%Y-%m-%d'),
+            'time': req.time,
+            'remarks': req.remarks,
+            'status': req.service_status
+        }
+
+        if req.service_status in ['requested', 'pending']:
+            pending.append(request_info)
+        elif req.service_status in ['assigned', 'active']:
+            active.append(request_info)
+        elif req.service_status in ['completed', 'closed']:
+            completed.append(request_info)
+        elif req.service_status in ['rejected', 'cancelled', 'flagged']:
+            rejected.append(request_info)
+
+    # Response with grouped requests
+    return jsonify({
+        'pending': pending,
+        'active': active,
+        'completed': completed,
+        'rejected': rejected
+    }), 200
