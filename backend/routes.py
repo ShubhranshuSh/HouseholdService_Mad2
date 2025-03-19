@@ -679,18 +679,19 @@ def get_service_details(service_id):
 @customer_required                # Ensures only customers can access
 def get_customer_requests():
     """
-    Route to fetch all service requests for the current customer grouped by status.
+    Route to fetch all service requests for the current customer grouped by status,
+    including both rejected by provider and cancelled by customer in the 'rejected' section.
     """
     customer_id = current_user.id
 
-    # Fetch all requests by the customer
+    # ✅ Fetch all service requests made by the current customer
     requests = ServiceRequest.query.filter_by(customer_id=customer_id).all()
 
-    # Group requests by status
+    # ✅ Grouping by status
     pending = []
     active = []
     completed = []
-    rejected = []
+    rejected = []   # Includes both 'rejected' and 'cancelled' requests
 
     for req in requests:
         service = Service.query.get(req.service_id)
@@ -704,19 +705,20 @@ def get_customer_requests():
             'status': req.service_status
         }
 
+        # ✅ Categorizing requests
         if req.service_status in ['requested', 'pending']:
             pending.append(request_info)
-        elif req.service_status in ['assigned', 'active']:
+        elif req.service_status in ['accepted', 'active']:
             active.append(request_info)
         elif req.service_status in ['completed', 'closed']:
             completed.append(request_info)
-        elif req.service_status in ['rejected', 'cancelled', 'flagged']:
-            rejected.append(request_info)
+        elif req.service_status in ['rejected', 'cancelled']:
+            rejected.append(request_info)   # ✅ Combine 'rejected' & 'cancelled'
 
-    # Response with grouped requests
+    # ✅ Response with categorized requests
     return jsonify({
         'pending': pending,
         'active': active,
         'completed': completed,
-        'rejected': rejected
+        'rejected': rejected   # Contains both rejected and cancelled requests
     }), 200

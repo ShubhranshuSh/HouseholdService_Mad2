@@ -38,7 +38,6 @@ export default {
     },
 
     methods: {
-
         // ✅ Fetch All Customer Requests
         async fetchCustomerRequests() {
             this.loading = true;
@@ -59,6 +58,7 @@ export default {
 
                 const data = await response.json();
                 this.requests = data;
+
             } catch (error) {
                 console.error("Error fetching requests:", error);
                 this.error = "Failed to load service requests. Please try again.";
@@ -89,12 +89,12 @@ export default {
                 const result = await response.json();
                 alert(result.message);
 
-                // ✅ Move the canceled request to 'rejected' section
+                // ✅ Move the canceled request to 'rejected' section with "cancelled" status
                 const canceledRequest = this.requests.pending.find(req => req.id === requestId);
                 
                 if (canceledRequest) {
                     this.requests.pending = this.requests.pending.filter(req => req.id !== requestId);
-                    canceledRequest.status = 'cancelled'; 
+                    canceledRequest.status = 'cancelled';  
                     this.requests.rejected.push(canceledRequest);
                 }
 
@@ -162,7 +162,7 @@ export default {
 
             <!-- ✅ Display Requests -->
             <div v-else>
-                
+
                 <!-- Pending Requests -->
                 <div v-if="activeTab === 'pending'">
                     <h3 class="text-center mb-3">📌 Pending Requests</h3>
@@ -170,38 +170,15 @@ export default {
                     
                     <div v-for="req in requests.pending" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-body d-flex justify-content-between align-items-center">
-
-                            <!-- ✅ Left Section: Service Details -->
                             <div>
                                 <h5 class="fw-bold">{{ req.service_name }}</h5>
-                                <p class="mb-1"><strong>Date:</strong> {{ req.date }}</p>
-                                <p class="mb-1"><strong>Time:</strong> {{ req.time }}</p>
-                                <p class="mb-1"><strong>Remarks:</strong> {{ req.remarks || "No remarks" }}</p>
+                                <p><strong>Date:</strong> {{ req.date }}</p>
+                                <p><strong>Time:</strong> {{ req.time }}</p>
+                                <p><strong>Remarks:</strong> {{ req.remarks || "No remarks" }}</p>
                             </div>
 
-                            <!-- ✅ Right Section: Status and Buttons -->
-                            <div class="d-flex flex-column align-items-end">
-                                
-                                <!-- ✅ Status Badge -->
-                                <div class="mb-3">
-                                    <span class="badge bg-warning fs-6 px-4 py-2">Pending</span>
-                                </div>
-
-                                <!-- ✅ Bottom Right: Buttons -->
-                                <div>
-                                    <button 
-                                        class="btn btn-outline-danger me-2"
-                                        @click="cancelRequest(req.id)"
-                                    >
-                                        Cancel
-                                    </button>
-
-                                    <button 
-                                        class="btn btn-outline-secondary"
-                                    >
-                                        Edit
-                                    </button>
-                                </div>
+                            <div>
+                                <span class="badge bg-warning fs-6">Pending</span>
                             </div>
                         </div>
                     </div>
@@ -214,18 +191,36 @@ export default {
 
                     <div v-for="req in requests.active" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-body d-flex justify-content-between align-items-center">
-
                             <div>
                                 <h5 class="fw-bold">{{ req.service_name }}</h5>
-                                <p class="mb-1"><strong>Date:</strong> {{ req.date }}</p>
-                                <p class="mb-1"><strong>Time:</strong> {{ req.time }}</p>
-                                <p class="mb-1"><strong>Remarks:</strong> {{ req.remarks || "No remarks" }}</p>
+                                <p><strong>Date:</strong> {{ req.date }}</p>
+                                <p><strong>Time:</strong> {{ req.time }}</p>
+                                <p><strong>Remarks:</strong> {{ req.remarks || "No remarks" }}</p>
                             </div>
 
-                            <div class="d-flex flex-column align-items-end">
-                                <div class="mb-3">
-                                    <span class="badge bg-primary fs-6 px-4 py-2">Active</span>
-                                </div>
+                            <div>
+                                <span class="badge bg-primary fs-6">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ Completed Requests -->
+                <div v-if="activeTab === 'completed'">
+                    <h3 class="text-center mb-3">✅ Completed Requests</h3>
+                    <div v-if="requests.completed.length === 0" class="text-muted text-center">No completed requests found.</div>
+
+                    <div v-for="req in requests.completed" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="fw-bold">{{ req.service_name }}</h5>
+                                <p><strong>Date:</strong> {{ req.date }}</p>
+                                <p><strong>Time:</strong> {{ req.time }}</p>
+                                <p><strong>Remarks:</strong> {{ req.remarks || "No remarks" }}</p>
+                            </div>
+
+                            <div>
+                                <span class="badge bg-success fs-6">Completed</span>
                             </div>
                         </div>
                     </div>
@@ -234,24 +229,22 @@ export default {
                 <!-- ✅ Rejected/Cancelled Requests -->
                 <div v-if="activeTab === 'rejected'">
                     <h3 class="text-center mb-3">🚫 Rejected/Cancelled Requests</h3>
-                    <div v-if="requests.rejected.length === 0" class="text-muted text-center">No rejected requests found.</div>
-
                     <div v-for="req in requests.rejected" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-body d-flex justify-content-between align-items-center">
-                            
-                            <!-- ✅ Left: Service Details -->
                             <div>
                                 <h5 class="fw-bold">{{ req.service_name }}</h5>
-                                <p><strong>Cancelled on:</strong> {{ req.date }}</p>
+                                <p>{{ req.remarks || "No remarks" }}</p>
                             </div>
-
-                            <!-- ✅ Right: Status -->
                             <div>
-                                <span class="badge bg-danger fs-6">Cancelled</span>
+                                <span class="badge" 
+                                    :class="req.status === 'cancelled' ? 'bg-danger' : 'bg-secondary'">
+                                    {{ req.status }}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

@@ -329,5 +329,81 @@ class ServiceRequestPendingAPI(Resource):
         return response, 200
 
 
-# ✅ Register the new API route
+# ✅ API for Accepting or Rejecting Requests
+class ServiceRequestActionAPI(Resource):
+    
+    @auth_required('token')
+    def put(self, request_id):
+        """Accept or Reject a Service Request"""
+        
+        data = request.get_json()
+        action = data.get('action')
+
+        # ✅ Validate action
+        if action not in ['accept', 'reject']:
+            return {'message': 'Invalid action. Use "accept" or "reject".'}, 400
+
+        # ✅ Fetch the service request
+        service_request = ServiceRequest.query.get(request_id)
+
+        if not service_request:
+            return {'message': 'Service request not found'}, 404
+
+        # ✅ Ensure only authorized users can update the request
+        if current_user.has_role('service_professional'):
+            if service_request.professional_id != current_user.id:
+                return {'message': 'Unauthorized access'}, 403
+
+        # ✅ Update request status
+        if action == 'accept':
+            service_request.service_status = 'accepted'
+        elif action == 'reject':
+            service_request.service_status = 'rejected'
+
+        # ✅ Save the changes
+        db.session.commit()
+
+        return {
+            'message': f'Service request {action}ed successfully',
+            'status': service_request.service_status
+        }, 200
+
+
+# ✅ NEW API for Marking Accepted Requests as Completed (Admin or Service Professional)
+class ServiceRequestCompleteAPI(Resource):
+    
+    @auth_required('token')
+    def put(self, request_id):
+        """Mark an accepted service request as completed"""
+
+        # ✅ Fetch the service request
+        service_request = ServiceRequest.query.get(request_id)
+
+        if not service_request:
+            return {'message': 'Service request not found'}, 404
+
+        # ✅ Ensure only Admin or assigned Service Professional can mark it as completed
+        if current_user.has_role('service_professional'):
+            if service_request.professional_id != current_user.id:
+                return {'message': 'Unauthorized access'}, 403
+
+        # ✅ Ensure the request is in 'accepted' status before marking as completed
+        if service_request.service_status != 'accepted':
+            return {'message': 'Only accepted requests can be marked as completed'}, 400
+
+        # ✅ Update the status to completed
+        service_request.service_status = 'completed'
+
+        # ✅ Save changes
+        db.session.commit()
+
+        return {
+            'message': 'Service marked as completed successfully',
+            'status': service_request.service_status
+        }, 200
+
+
+# ✅ Register the new API routes
 api.add_resource(ServiceRequestPendingAPI, '/service-requests/pending')
+api.add_resource(ServiceRequestActionAPI, '/service-requests/<int:request_id>/action')
+api.add_resource(ServiceRequestCompleteAPI, '/service-requests/<int:request_id>/complete')
