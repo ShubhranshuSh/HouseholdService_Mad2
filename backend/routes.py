@@ -547,6 +547,69 @@ def get_admin_services():
 
 
 
+@app.route('/admin/request', methods=['GET'])
+@auth_required('token')               # Ensures the user is authenticated
+@admin_required                       # Ensures only admin can access
+def get_admin_requests():
+    """
+    Route to fetch all service requests for the services created by the admin,
+    grouped by their respective status.
+    """
+    
+    admin_id = current_user.id
+
+    # ✅ Fetch all services created by the admin
+    services = Service.query.filter_by(user_id=admin_id).all()
+    
+    # ✅ Extract the service IDs
+    service_ids = [service.id for service in services]
+
+    if not service_ids:
+        return jsonify({'message': 'No services found for this admin'}), 404
+
+    # ✅ Fetch all service requests related to the admin's services
+    requests = ServiceRequest.query.filter(ServiceRequest.service_id.in_(service_ids)).all()
+
+    # ✅ Grouping requests by status
+    pending = []
+    active = []
+    completed = []
+    rejected = []
+
+    for req in requests:
+        service = Service.query.get(req.service_id)
+        customer = User.query.get(req.customer_id)
+
+        request_info = {
+            'id': req.id,
+            'service_name': service.name if service else 'Unknown Service',
+            'customer_name': customer.name if customer else 'Unknown Customer',
+            'date': req.date_of_request.strftime('%Y-%m-%d'),
+            'time': req.time,
+            'remarks': req.remarks,
+            'status': req.service_status
+        }
+
+        # ✅ Categorizing requests
+        if req.service_status in ['requested', 'pending']:
+            pending.append(request_info)
+        elif req.service_status in ['accepted', 'active']:
+            active.append(request_info)
+        elif req.service_status in ['completed', 'closed']:
+            completed.append(request_info)
+        elif req.service_status in ['rejected', 'cancelled']:
+            rejected.append(request_info)
+
+    # ✅ Response with categorized requests
+    return jsonify({
+        'pending': pending,
+        'active': active,
+        'completed': completed,
+        'rejected': rejected
+    }), 200
+
+
+
 
 
 
@@ -580,6 +643,58 @@ def service_professional_dashboard(user_id):
     }), 200
 
 
+
+@app.route('/service-professional/requests', methods=['GET'])
+@auth_required('token')                     # Ensures the user is authenticated
+@service_professional_required              # Ensures only service professionals can access
+def get_service_professional_requests():
+    """
+    Route to fetch all service requests assigned to the service professional,
+    grouped by their respective status.
+    """
+
+    professional_id = current_user.id
+
+    # ✅ Fetch all service requests assigned to the current service professional
+    requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
+
+    # ✅ Grouping requests by status
+    pending = []
+    active = []
+    completed = []
+    rejected = []
+
+    for req in requests:
+        service = Service.query.get(req.service_id)
+        customer = User.query.get(req.customer_id)
+
+        request_info = {
+            'id': req.id,
+            'service_name': service.name if service else 'Unknown Service',
+            'customer_name': customer.name if customer else 'Unknown Customer',
+            'date': req.date_of_request.strftime('%Y-%m-%d'),
+            'time': req.time,
+            'remarks': req.remarks,
+            'status': req.service_status
+        }
+
+        # ✅ Categorizing requests
+        if req.service_status in ['requested', 'pending']:
+            pending.append(request_info)
+        elif req.service_status in ['accepted', 'active']:
+            active.append(request_info)
+        elif req.service_status in ['completed', 'closed']:
+            completed.append(request_info)
+        elif req.service_status in ['rejected', 'cancelled']:
+            rejected.append(request_info)
+
+    # ✅ Response with categorized requests
+    return jsonify({
+        'pending': pending,
+        'active': active,
+        'completed': completed,
+        'rejected': rejected
+    }), 200
 
 
 
