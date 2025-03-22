@@ -644,6 +644,7 @@ def service_professional_dashboard(user_id):
 
 @app.route('/service_professional/services', methods=['GET'])
 @auth_required('token')
+@service_professional_required
 def get_professional_services():
     """Fetch only services created by the logged-in service professional."""
     
@@ -672,19 +673,28 @@ def get_professional_services():
 
 
 
-@app.route('/service-professional/requests', methods=['GET'])
-@auth_required('token')                     # Ensures the user is authenticated
-@service_professional_required              # Ensures only service professionals can access
-def get_service_professional_requests():
+@app.route('/service_professional/requests', methods=['GET'])
+@auth_required('token')  # Ensures the user is authenticated
+@service_professional_required  # Ensures only service professionals can access
+def get_professional_requests():
     """
-    Route to fetch all service requests assigned to the service professional,
+    Route to fetch all service requests for the services created by the service professional,
     grouped by their respective status.
     """
-
+    
     professional_id = current_user.id
 
-    # ✅ Fetch all service requests assigned to the current service professional
-    requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
+    # ✅ Fetch all services created by the service professional
+    services = Service.query.filter_by(user_id=professional_id).all()
+    
+    # ✅ Extract the service IDs
+    service_ids = [service.id for service in services]
+
+    if not service_ids:
+        return jsonify({'message': 'No services found for this professional'}), 404
+
+    # ✅ Fetch all service requests related to the professional's services
+    requests = ServiceRequest.query.filter(ServiceRequest.service_id.in_(service_ids)).all()
 
     # ✅ Grouping requests by status
     pending = []
@@ -723,6 +733,7 @@ def get_service_professional_requests():
         'completed': completed,
         'rejected': rejected
     }), 200
+
 
 
 

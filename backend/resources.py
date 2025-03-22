@@ -288,19 +288,22 @@ class ServiceRequestPendingAPI(Resource):
     @marshal_with(service_request_details_fields)
     @auth_required('token')
     def get(self):
-        """Fetch only pending service requests for Admin or Service Professional"""
+        """Fetch only pending service requests for Admin or Service Professional they created"""
 
         service_requests = []
 
-        # ✅ Admin: Fetch all pending requests
+        # ✅ Admin: Fetch only pending requests for their own services
         if current_user.has_role('admin'):
-            service_requests = ServiceRequest.query.filter_by(service_status='requested').all()
+            service_requests = ServiceRequest.query.join(Service).filter(
+                Service.user_id == current_user.id,   # Only admin's services
+                ServiceRequest.service_status == 'requested'
+            ).all()
 
-        # ✅ Service Professional: Fetch only their assigned pending requests
+        # ✅ Service Professional: Fetch only their own pending requests
         elif current_user.has_role('service_professional'):
-            service_requests = ServiceRequest.query.filter_by(
-                professional_id=current_user.id, 
-                service_status='requested'
+            service_requests = ServiceRequest.query.join(Service).filter(
+                Service.user_id == current_user.id,   # Only their own services
+                ServiceRequest.service_status == 'requested'
             ).all()
 
         else:
@@ -329,12 +332,12 @@ class ServiceRequestPendingAPI(Resource):
         return response, 200
 
 
-# ✅ API for Accepting or Rejecting Requests
+# ✅ API for Accepting or Rejecting Requests with Ownership Validation
 class ServiceRequestActionAPI(Resource):
     
     @auth_required('token')
     def put(self, request_id):
-        """Accept or Reject a Service Request"""
+        """Accept or Reject a Service Request with ownership validation"""
         
         data = request.get_json()
         action = data.get('action')
@@ -349,10 +352,11 @@ class ServiceRequestActionAPI(Resource):
         if not service_request:
             return {'message': 'Service request not found'}, 404
 
-        # ✅ Ensure only authorized users can update the request
-        if current_user.has_role('service_professional'):
-            if service_request.professional_id != current_user.id:
-                return {'message': 'Unauthorized access'}, 403
+        # ✅ Verify ownership: Ensure only the owner of the service can accept/reject
+        service = Service.query.get(service_request.service_id)
+
+        if not service or service.user_id != current_user.id:
+            return {'message': 'Unauthorized access. You cannot modify this request.'}, 403
 
         # ✅ Update request status
         if action == 'accept':
@@ -369,12 +373,12 @@ class ServiceRequestActionAPI(Resource):
         }, 200
 
 
-# ✅ NEW API for Marking Accepted Requests as Completed (Admin or Service Professional)
+# ✅ API for Marking Accepted Requests as Completed with Ownership Validation
 class ServiceRequestCompleteAPI(Resource):
     
     @auth_required('token')
     def put(self, request_id):
-        """Mark an accepted service request as completed"""
+        """Mark an accepted service request as completed with ownership check"""
 
         # ✅ Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
@@ -382,10 +386,11 @@ class ServiceRequestCompleteAPI(Resource):
         if not service_request:
             return {'message': 'Service request not found'}, 404
 
-        # ✅ Ensure only Admin or assigned Service Professional can mark it as completed
-        if current_user.has_role('service_professional'):
-            if service_request.professional_id != current_user.id:
-                return {'message': 'Unauthorized access'}, 403
+        # ✅ Verify ownership: Ensure only the owner of the service can mark as completed
+        service = Service.query.get(service_request.service_id)
+
+        if not service or service.user_id != current_user.id:
+            return {'message': 'Unauthorized access. You cannot complete this request.'}, 403
 
         # ✅ Ensure the request is in 'accepted' status before marking as completed
         if service_request.service_status != 'accepted':
@@ -403,7 +408,7 @@ class ServiceRequestCompleteAPI(Resource):
         }, 200
 
 
-# ✅ Register the new API routes
+# ✅ Register the updated API routes
 api.add_resource(ServiceRequestPendingAPI, '/service-requests/pending')
 api.add_resource(ServiceRequestActionAPI, '/service-requests/<int:request_id>/action')
 api.add_resource(ServiceRequestCompleteAPI, '/service-requests/<int:request_id>/complete')
