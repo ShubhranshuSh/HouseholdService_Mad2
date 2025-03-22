@@ -218,6 +218,76 @@ def register_service_professional():
 
 
 # Admin Routes
+
+@app.route('/admin/home', methods=['GET'])
+@auth_required('token')  # Ensure the user is authenticated
+@admin_required           # Ensure only admin can access
+def admin_home():
+    """
+    Route to fetch all services running on the platform for Admin.
+    """
+    
+    # ✅ Fetch all services
+    services = Service.query.all()
+
+    # ✅ Prepare the response
+    service_list = []
+    
+    for service in services:
+        creator = User.query.get(service.user_id)
+        
+        service_info = {
+            'id': service.id,
+            'name': service.name,
+            'price': service.price,
+            'timing': service.timing,
+            'description': service.description,
+            'service_category': service.service_category,
+            'creator_name': creator.name if creator else "Unknown",
+            'is_flagged': service.is_flagged
+        }
+
+        service_list.append(service_info)
+
+    # ✅ Return the response
+    return jsonify({
+        'services': service_list
+    }), 200
+
+
+@app.route('/admin/flag-service/<int:service_id>', methods=['PUT'])
+@auth_required('token')     # Ensure the user is authenticated
+@admin_required              # Ensure only admin can access
+def flag_unflag_service(service_id):
+    """
+    Route to toggle the flag status of a service.
+    - Flag the service if unflagged.
+    - Unflag the service if already flagged.
+    """
+    
+    # ✅ Fetch the service by ID
+    service = Service.query.get(service_id)
+
+    if not service:
+        return jsonify({"message": "Service not found"}), 404
+
+    # ✅ Toggle the flag status
+    service.is_flagged = not service.is_flagged
+
+    # ✅ Commit changes to the database
+    db.session.commit()
+
+    # ✅ Return success message
+    status = "flagged" if service.is_flagged else "unflagged"
+    return jsonify({
+        "message": f"Service successfully {status}.",
+        "service_id": service.id,
+        "is_flagged": service.is_flagged
+    }), 200
+
+
+
+
     
 @app.route('/admin/applications', methods=['GET'])
 @admin_required

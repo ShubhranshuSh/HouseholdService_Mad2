@@ -102,6 +102,7 @@ api.add_resource(ServiceProfessionalResumeAPI, '/admin/application/<int:service_
     
 # ----------------- Service API -----------------
 
+# ✅ Include `is_flagged` in the response
 service_fields = {
     'id': fields.Integer,
     'name': fields.String,
@@ -109,10 +110,12 @@ service_fields = {
     'timing': fields.String,
     'description': fields.String,
     'service_category': fields.String,
-    'user_id': fields.Integer
+    'user_id': fields.Integer,
+    'is_flagged': fields.Boolean    # ✅ Added is_flagged field
 }
 
 class ServiceAPI(Resource):
+
     @marshal_with(service_fields)
     @auth_required('token')
     def get(self, service_id):
@@ -129,6 +132,11 @@ class ServiceAPI(Resource):
             return {"message": "Not authorized or service not found"}, 403
 
         data = request.get_json()
+
+        # ✅ Prevent modification of `is_flagged` by non-admins or professionals
+        if 'is_flagged' in data:
+            del data['is_flagged']
+
         for key, value in data.items():
             setattr(service, key, value)
         
@@ -145,23 +153,34 @@ class ServiceAPI(Resource):
         db.session.commit()
         return {"message": "Service deleted successfully"}, 200
 
+
 class ServiceListAPI(Resource):
+
     @auth_required('token')
     def post(self):
+        """Create a new service with `is_flagged` set to False by default"""
         data = request.get_json()
+
+        # ✅ Ensure all required fields are present
         if not all(k in data for k in ["name", "price", "timing", "description", "service_category"]):
             return {"message": "Missing required fields"}, 400
 
-        new_service = Service(user_id=current_user.id, **data)
+        # ✅ Set `is_flagged` to False by default on creation
+        new_service = Service(
+            user_id=current_user.id,
+            is_flagged=False,     # ✅ Automatically set to False on creation
+            **data
+        )
+
         db.session.add(new_service)
         db.session.commit()
+
         return {"message": "Service created successfully"}, 201
 
 
-# Register API routes
-api.add_resource(ServiceAPI, '/services/<int:service_id>')  # Fetch specific service
+# ✅ Register API routes
+api.add_resource(ServiceAPI, '/services/<int:service_id>')  # Fetch, update, and delete specific service
 api.add_resource(ServiceListAPI, '/services')  # Handle service creation only
-
 
 
 

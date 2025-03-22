@@ -41,6 +41,10 @@ class Service(db.Model):
     description = db.Column(db.String(255), nullable=True)
     service_category = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # ✅ New column to indicate if the service is flagged
+    is_flagged = db.Column(db.Boolean, default=False, nullable=False)
+
 
 class ServiceRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
