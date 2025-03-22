@@ -42,7 +42,7 @@ export default {
               <router-link class="nav-link" to="/service_professional/requests" style="color: white; font-weight: 500;">Requests</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="/service_professional/my-services" style="color: white; font-weight: 500;">My Services</router-link>
+              <router-link class="nav-link" to="/service_professional/services" style="color: white; font-weight: 500;">My Services</router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/service_professional/customers" style="color: white; font-weight: 500;">Customers</router-link>

@@ -20,6 +20,9 @@ import ProfessionalRequest from "../pages/ProfessionalRequest.js";
 import AdminRequest from "../pages/AdminRequest.js";
 import CustomerServiceRequestForm from "../pages/CustomerServiceRequestForm.js";
 import CustomerRequestPage from "../pages/CustomerRequestPage.js";
+import ProfessionalServicePage from "../pages/ProfessionalServicePage.js";
+import ProfessionalServiceAdd from "../pages/ProfessionalServiceAdd.js";
+import ProfessionalServiceEdit from "../pages/ProfessionalServiceEdit.js";
 
 // Mapping of routes to components
 const routes = [
@@ -44,7 +47,10 @@ const routes = [
     {path: '/professional/request', component: ProfessionalRequest},
     {path: '/admin/request', component: AdminRequest},
     {path: '/customer/service/request/:id', component: CustomerServiceRequestForm},
-    {path: '/customer/requests', component: CustomerRequestPage}
+    {path: '/customer/requests', component: CustomerRequestPage},
+    {path: '/service_professional/services', component: ProfessionalServicePage},
+    {path: '/service_professional/services/add', component: ProfessionalServiceAdd},
+    {path: '/service_professional/services/edit/:id', component: ProfessionalServiceEdit}
     
 ];
 
