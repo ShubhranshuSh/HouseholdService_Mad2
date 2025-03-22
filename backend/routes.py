@@ -642,6 +642,34 @@ def service_professional_dashboard(user_id):
         'experience': current_user.experience
     }), 200
 
+@app.route('/service_professional/services', methods=['GET'])
+@auth_required('token')
+def get_professional_services():
+    """Fetch only services created by the logged-in service professional."""
+    
+    # Fetch services where the creator is the current service professional
+    services = Service.query.filter_by(user_id=current_user.id).all()
+
+    if not services:
+        return jsonify({"message": "No services found"}), 404
+
+    # Prepare the response
+    services_list = [
+        {
+            "id": service.id,
+            "name": service.name,
+            "price": service.price,
+            "timing": service.timing,
+            "description": service.description,
+            "service_category": service.service_category,
+            "user_id": service.user_id
+        }
+        for service in services
+    ]
+
+    return jsonify(services_list), 200
+
+
 
 
 @app.route('/service-professional/requests', methods=['GET'])
@@ -695,6 +723,9 @@ def get_service_professional_requests():
         'completed': completed,
         'rejected': rejected
     }), 200
+
+
+
 
 
 

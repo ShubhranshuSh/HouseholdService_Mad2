@@ -165,7 +165,7 @@ api.add_resource(ServiceListAPI, '/services')  # Handle service creation only
 
 
 
-# ----------------- Service Request API -----------------
+# ----------------- Service Request API from Customer -----------------
 
 # ✅ Define the fields for marshalling the response
 service_request_fields = {
