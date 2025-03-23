@@ -210,24 +210,19 @@ class ServiceRequestAPI(Resource):
         parser.add_argument('date_of_request', type=str, required=True, help='Date of request is required')
         parser.add_argument('time', type=str, required=True, help='Time is required')
         parser.add_argument('remarks', type=str, required=False)
-
         args = parser.parse_args()
-
         # Validate customer role
         if not current_user.has_role('customer'):
             return {'message': 'Only customers can create service requests'}, 403
-
         # Validate the service existence
         service = Service.query.get(service_id)
         if not service:
             return {'message': 'Service not found'}, 404
-
         # Validate date format
         try:
             date_of_request = datetime.strptime(args['date_of_request'], '%Y-%m-%d')
         except ValueError:
             return {'message': 'Invalid date format. Use YYYY-MM-DD'}, 400
-
         # Create new service request
         new_request = ServiceRequest(
             service_id=service_id,
@@ -238,14 +233,11 @@ class ServiceRequestAPI(Resource):
             service_status='requested',
             remarks=args.get('remarks', None)
         )
-
         db.session.add(new_request)
         db.session.commit()
-
         return new_request, 201
 
-
-# ✅ New API route for cancelling a service request
+# ✅ Modified API route for cancelling a service request
 class CancelServiceRequestAPI(Resource):
     @auth_required('token')
     @customer_required
@@ -254,35 +246,70 @@ class CancelServiceRequestAPI(Resource):
         
         # Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
-
         if not service_request:
             return {'message': 'Service request not found'}, 404
-
         # Ensure the current user owns the request
         if service_request.customer_id != current_user.id:
             return {'message': 'Unauthorized: You can only cancel your own requests'}, 403
-
-        # Only allow cancellation if the request is pending or active
-        if service_request.service_status not in ['requested', 'assigned', 'active']:
+        # Allow cancellation for more statuses, including accepted
+        if service_request.service_status not in ['requested', 'assigned', 'active', 'accepted']:
             return {'message': 'Only pending or active requests can be cancelled'}, 400
-
         # Confirmation message
         confirmation_message = "Are you sure you want to cancel this service?"
-
         # Cancel the request
         service_request.service_status = 'cancelled'
         db.session.commit()
-
-        # ✅ No `jsonify()` needed here
         return {
             'message': 'Service request cancelled successfully',
             'confirmation': confirmation_message
         }, 200
 
+# ✅ Modified API route for editing a service request
+class EditServiceRequestAPI(Resource):
+    @auth_required('token')
+    @customer_required
+    def put(self, request_id):
+        """
+        Edit an existing service request by the customer.
+        """
+        # Fetch the service request
+        service_request = ServiceRequest.query.get(request_id)
+        if not service_request:
+            return {'message': 'Service request not found'}, 404
+        # Ensure the current user owns the request
+        if service_request.customer_id != current_user.id:
+            return {'message': 'Unauthorized: You can only edit your own requests'}, 403
+        # Allow editing for more statuses, including accepted
+        if service_request.service_status not in ['requested', 'assigned', 'active', 'accepted']:
+            return {'message': 'Only pending or active requests can be edited'}, 400
+        # Parse the request data
+        parser = reqparse.RequestParser()
+        parser.add_argument('date_of_request', type=str, required=False)
+        parser.add_argument('time', type=str, required=False)
+        parser.add_argument('remarks', type=str, required=False)
+        args = parser.parse_args()
+        # Update the service request fields if provided
+        if args['date_of_request']:
+            try:
+                service_request.date_of_request = datetime.strptime(args['date_of_request'], '%Y-%m-%d')
+            except ValueError:
+                return {'message': 'Invalid date format. Use YYYY-MM-DD'}, 400
+        if args['time']:
+            service_request.time = args['time']
+        if args['remarks']:
+            service_request.remarks = args['remarks']
+        # Commit changes to the database
+        db.session.commit()
+        return {
+            'message': 'Service request updated successfully',
+            'request_id': service_request.id
+        }, 200
 
 # ✅ Register the API routes
 api.add_resource(ServiceRequestAPI, '/customer/service/request/<int:service_id>')
 api.add_resource(CancelServiceRequestAPI, '/customer/service/request/cancel/<int:request_id>')
+api.add_resource(EditServiceRequestAPI, '/customer/service/request/edit/<int:request_id>')
+
 
 
 # ----------------- Service Request for Service Professionals and Admin from Customer API -----------------

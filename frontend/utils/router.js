@@ -18,6 +18,7 @@ import CustomerHome from "../pages/CustomerHome.js";
 import CustomerServiceDetail from "../pages/CustomerServiceDetail.js";
 import AdminRequest from "../pages/AdminRequest.js";
 import CustomerServiceRequestForm from "../pages/CustomerServiceRequestForm.js";
+import CustomerRequestEditForm from "../pages/CustomerRequestEditForm.js";
 import CustomerRequestPage from "../pages/CustomerRequestPage.js";
 import ProfessionalServicePage from "../pages/ProfessionalServicePage.js";
 import ProfessionalServiceAdd from "../pages/ProfessionalServiceAdd.js";
@@ -46,6 +47,7 @@ const routes = [
     {path: '/customer/service/:id', component: CustomerServiceDetail},
     {path: '/admin/request', component: AdminRequest},
     {path: '/customer/service/request/:id', component: CustomerServiceRequestForm},
+    {path: '/customer/request/edit/:id', component: CustomerRequestEditForm},
     {path: '/customer/requests', component: CustomerRequestPage},
     {path: '/service_professional/services', component: ProfessionalServicePage},
     {path: '/service_professional/services/add', component: ProfessionalServiceAdd},
