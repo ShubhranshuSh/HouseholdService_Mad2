@@ -3,6 +3,7 @@ import os
 from flask_login import current_user
 from flask_restful import Api, Resource, fields, marshal_with, reqparse
 from flask_security import auth_required
+from sqlalchemy import and_
 from backend.models import User, Role, db, Service , ServiceRequest
 from datetime import datetime
 from flask import abort, jsonify, send_file, request
@@ -458,3 +459,6 @@ class ServiceRequestCompleteAPI(Resource):
 api.add_resource(ServiceRequestPendingAPI, '/service-requests/pending')
 api.add_resource(ServiceRequestActionAPI, '/service-requests/<int:request_id>/action')
 api.add_resource(ServiceRequestCompleteAPI, '/service-requests/<int:request_id>/complete')
+
+
+

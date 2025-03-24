@@ -1,5 +1,6 @@
 from functools import wraps
 import os
+import traceback
 from flask import current_app as app, jsonify, request, render_template , abort, send_file
 from flask_security import auth_required, verify_password, hash_password, login_required, current_user, logout_user, login_user
 from backend.models import Service, db, User, Role , ServiceRequest , Service
@@ -211,6 +212,56 @@ def register_service_professional():
         db.session.rollback()
         app.logger.error(f"Error creating service professional user: {e}")
         return jsonify({'message': 'Error creating service professional user'}), 500
+    
+
+
+
+# SearchBar Route
+@app.route('/search-services', methods=['GET'])
+def search_services():
+    try:
+        # Get query parameters
+        category = request.args.get('category', None)
+        pincode = request.args.get('pincode', None)
+
+        # Validate input
+        if not category and not pincode:
+            return jsonify({"message": "Please provide at least a category or pincode"}), 400
+
+        # Build the query with explicit join using user_id
+        query = db.session.query(Service, User).filter(Service.user_id == User.id)
+
+        if category:
+            query = query.filter(Service.service_category.ilike(f"%{category}%"))
+        if pincode:
+            query = query.filter(User.pincode == int(pincode))
+
+        results = query.all()
+
+        if not results:
+            return jsonify({"message": "No services found matching the search criteria"}), 404
+
+        # Format the results
+        services = [
+            {
+                "id": service.id,
+                "name": service.name,
+                "category": service.service_category,
+                "price": service.price,
+                "timing": service.timing,
+                "description": service.description,
+                "pincode": user.pincode,
+                "provider": user.name
+            }
+            for service, user in results
+        ]
+
+        return jsonify(services), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"message": "Error occurred while searching for services"}), 500
     
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
