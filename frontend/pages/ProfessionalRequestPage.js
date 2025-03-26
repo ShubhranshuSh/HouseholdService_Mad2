@@ -229,7 +229,8 @@ export default {
                                     'bg-warning': req.status === 'requested',
                                     'bg-primary': req.status === 'active',
                                     'bg-success': req.status === 'completed',
-                                    'bg-danger': req.status === 'rejected' || req.status === 'cancelled'
+                                    'bg-danger': req.status === 'rejected',
+                                    'bg-secondary':req.status === 'cancelled'
                                 }">
                                 {{ req.status }}
                             </span>
