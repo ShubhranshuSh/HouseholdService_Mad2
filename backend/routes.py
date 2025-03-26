@@ -788,9 +788,55 @@ def service_professional_dashboard(user_id):
         'name': current_user.name,
         'email': current_user.email,
         'phone': current_user.phone,
+        'address': current_user.address,
         'service_category': current_user.service_category,
         'experience': current_user.experience
     }), 200
+
+@app.route('/service_professional/dashboard/<int:user_id>/update', methods=['PUT'])
+@auth_required('token')  # Ensures the user is logged in
+@service_professional_required  # Ensures only service professionals can access
+def update_service_professional_profile(user_id):
+    """
+    Allows the service professional to update their profile details (email, phone, address, and experience).
+    """
+
+    # Check if the logged-in user is accessing their own profile
+    if current_user.id != user_id:
+        return jsonify({'message': 'Access Denied: You can only update your own profile'}), 403
+
+    # Parse the request data
+    data = request.get_json()
+
+    # Check for duplicate phone number
+    new_phone = data.get('phone', current_user.phone)
+    if new_phone != current_user.phone:
+        existing_user = User.query.filter_by(phone=new_phone).first()
+        if existing_user:
+            return jsonify({'message': 'Phone number already in use by another user'}), 400
+
+    # Validate and update editable fields only
+    current_user.email = data.get('email', current_user.email)
+    current_user.phone = new_phone
+    current_user.address = data.get('address', current_user.address)
+    current_user.experience = data.get('experience', current_user.experience)
+
+    # Commit the changes to the database
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Profile updated successfully',
+        'id': current_user.id,
+        'name': current_user.name,  # Non-editable field
+        'email': current_user.email,
+        'phone': current_user.phone,
+        'address': current_user.address,
+        'experience': current_user.experience,
+        'service_category': current_user.service_category  # Non-editable field
+    }), 200
+
+
+
 
 @app.route('/service_professional/home', methods=['GET'])
 @auth_required('token')  # Ensures the user is logged in

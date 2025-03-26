@@ -90,6 +90,7 @@ export default {
                 });
             }
         },
+        
         async retryWithAlternativeAuth() {
             try {
                 this.loading = true;
@@ -140,9 +141,10 @@ export default {
         },
         // Placeholder for future edit functionality
         editProfile() {
-            console.log("Edit profile functionality will be implemented in the future");
-            // This is intentionally left as a placeholder with no functionality
+            const userId = this.$route.params.id || store.state.user_id;
+            this.$router.push(`/service_professional/dashboard/update/${userId}`);
         }
+        
     },
     template: `
       <div>
@@ -170,6 +172,7 @@ export default {
               <p><strong>Name:</strong> {{ profile.name || 'Not available' }}</p>
               <p><strong>Email:</strong> {{ profile.email || 'Not available' }}</p>
               <p><strong>Phone:</strong> {{ profile.phone || 'Not available' }}</p>
+              <p><strong>Address:</strong> {{ profile.address || 'Not available' }}</p>
               <p><strong>Service Category:</strong> {{ profile.service_category || 'Not available' }}</p>
               <p><strong>Experience:</strong> {{ profile.experience || 'Not available' }} {{ profile.experience ? 'years' : '' }}</p>
               
