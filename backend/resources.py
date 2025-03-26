@@ -201,6 +201,7 @@ service_request_fields = {
     'feedback': fields.String
 }
 
+# ✅ Create Service Request API
 class ServiceRequestAPI(Resource):
     @marshal_with(service_request_fields)
     @auth_required('token')
@@ -212,19 +213,32 @@ class ServiceRequestAPI(Resource):
         parser.add_argument('time', type=str, required=True, help='Time is required')
         parser.add_argument('remarks', type=str, required=False)
         args = parser.parse_args()
-        # Validate customer role
+
+        # ✅ Validate customer role
         if not current_user.has_role('customer'):
             return {'message': 'Only customers can create service requests'}, 403
-        # Validate the service existence
+
+        # ✅ Validate the service existence
         service = Service.query.get(service_id)
         if not service:
             return {'message': 'Service not found'}, 404
-        # Validate date format
+
+        # ✅ Check if service is flagged
+        if service.is_flagged:   # ✅ Flagged service validation
+            return {'message': 'Service You are requesting is no longer available'}, 410
+
+        # ✅ Validate date format
         try:
-            date_of_request = datetime.strptime(args['date_of_request'], '%Y-%m-%d')
+            date_of_request = datetime.strptime(args['date_of_request'], '%Y-%m-%d').date()
+
+            # ✅ Ensure date is today or in the future
+            if date_of_request < datetime.now().date():
+                return {'message': 'Choose a valid date.'}, 400
+
         except ValueError:
             return {'message': 'Invalid date format. Use YYYY-MM-DD'}, 400
-        # Create new service request
+
+        # ✅ Create new service request
         new_request = ServiceRequest(
             service_id=service_id,
             customer_id=current_user.id,
@@ -234,38 +248,47 @@ class ServiceRequestAPI(Resource):
             service_status='requested',
             remarks=args.get('remarks', None)
         )
+
         db.session.add(new_request)
         db.session.commit()
+
         return new_request, 201
 
-# ✅ Modified API route for cancelling a service request
+
+# ✅ Cancel Service Request API
 class CancelServiceRequestAPI(Resource):
     @auth_required('token')
     @customer_required
     def delete(self, request_id):
         """Cancel a service request by the customer"""
-        
-        # Fetch the service request
+
+        # ✅ Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
         if not service_request:
             return {'message': 'Service request not found'}, 404
-        # Ensure the current user owns the request
+
+        # ✅ Ensure the current user owns the request
         if service_request.customer_id != current_user.id:
             return {'message': 'Unauthorized: You can only cancel your own requests'}, 403
-        # Allow cancellation for more statuses, including accepted
+
+        # ✅ Allow cancellation for more statuses, including accepted
         if service_request.service_status not in ['requested', 'assigned', 'active', 'accepted']:
             return {'message': 'Only pending or active requests can be cancelled'}, 400
-        # Confirmation message
+
+        # ✅ Confirmation message
         confirmation_message = "Are you sure you want to cancel this service?"
-        # Cancel the request
+
+        # ✅ Cancel the request
         service_request.service_status = 'cancelled'
         db.session.commit()
+
         return {
             'message': 'Service request cancelled successfully',
             'confirmation': confirmation_message
         }, 200
 
-# ✅ Modified API route for editing a service request
+
+# ✅ Edit Service Request API
 class EditServiceRequestAPI(Resource):
     @auth_required('token')
     @customer_required
@@ -273,40 +296,57 @@ class EditServiceRequestAPI(Resource):
         """
         Edit an existing service request by the customer.
         """
-        # Fetch the service request
+
+        # ✅ Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
         if not service_request:
             return {'message': 'Service request not found'}, 404
-        # Ensure the current user owns the request
+
+        # ✅ Ensure the current user owns the request
         if service_request.customer_id != current_user.id:
             return {'message': 'Unauthorized: You can only edit your own requests'}, 403
-        # Allow editing for more statuses, including accepted
+
+        # ✅ Allow editing for more statuses, including accepted
         if service_request.service_status not in ['requested', 'assigned', 'active', 'accepted']:
             return {'message': 'Only pending or active requests can be edited'}, 400
-        # Parse the request data
+
+        # ✅ Parse the request data
         parser = reqparse.RequestParser()
         parser.add_argument('date_of_request', type=str, required=False)
         parser.add_argument('time', type=str, required=False)
         parser.add_argument('remarks', type=str, required=False)
         args = parser.parse_args()
-        # Update the service request fields if provided
+
+        # ✅ Update the service request fields if provided
         if args['date_of_request']:
             try:
-                service_request.date_of_request = datetime.strptime(args['date_of_request'], '%Y-%m-%d')
+                new_date = datetime.strptime(args['date_of_request'], '%Y-%m-%d').date()
+
+                # ✅ Validate date is today or future
+                if new_date < datetime.now().date():
+                    return {'message': 'Choose a valid date.'}, 400
+
+                service_request.date_of_request = new_date
+
             except ValueError:
                 return {'message': 'Invalid date format. Use YYYY-MM-DD'}, 400
+
         if args['time']:
             service_request.time = args['time']
+
         if args['remarks']:
             service_request.remarks = args['remarks']
-        # Commit changes to the database
+
+        # ✅ Commit changes to the database
         db.session.commit()
+
         return {
             'message': 'Service request updated successfully',
             'request_id': service_request.id
         }, 200
 
-# ✅ Register the API routes
+
+# ✅ Register the API Routes
 api.add_resource(ServiceRequestAPI, '/customer/service/request/<int:service_id>')
 api.add_resource(CancelServiceRequestAPI, '/customer/service/request/cancel/<int:request_id>')
 api.add_resource(EditServiceRequestAPI, '/customer/service/request/edit/<int:request_id>')
