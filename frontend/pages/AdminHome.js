@@ -40,7 +40,8 @@ export default {
             this.loading.flagged = true;
 
             try {
-                const response = await fetch('/admin/home', {
+                const timestamp = new Date().getTime();  // ✅ Cache-busting
+                const response = await fetch(`/admin/home?timestamp=${timestamp}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -72,7 +73,7 @@ export default {
             }
         },
 
-        // ✅ Toggle flag status and update both lists
+        // ✅ Toggle flag status dynamically
         async toggleFlag(service) {
             const confirmAction = service.is_flagged
                 ? confirm("Are you sure you want to unflag this service?")
@@ -86,7 +87,8 @@ export default {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authentication-Token': store.state.auth_token
-                    }
+                    },
+                    body: JSON.stringify({})   // ✅ Empty body for compatibility
                 });
 
                 if (!response.ok) {
@@ -96,8 +98,17 @@ export default {
                 const result = await response.json();
                 alert(result.message);
 
-                // ✅ Refresh the lists dynamically
-                this.fetchServices();
+                // ✅ Update the flag status dynamically
+                service.is_flagged = !service.is_flagged;
+
+                // ✅ Move the service to the appropriate list
+                if (service.is_flagged) {
+                    this.unflaggedServices = this.unflaggedServices.filter(s => s.id !== service.id);
+                    this.flaggedServices.push(service);
+                } else {
+                    this.flaggedServices = this.flaggedServices.filter(s => s.id !== service.id);
+                    this.unflaggedServices.push(service);
+                }
 
             } catch (error) {
                 console.error("Error toggling flag status:", error);
@@ -105,7 +116,7 @@ export default {
             }
         },
 
-        // ✅ Update services when search results change
+        // ✅ Update services dynamically when search results change
         updateServices(services) {
             this.unflaggedServices = services.filter(service => !service.is_flagged);
             this.flaggedServices = services.filter(service => service.is_flagged);
@@ -118,7 +129,7 @@ export default {
         <AdminNavbar />
 
         <div class="container mt-5">
-            <h1 class="text-center mb-4">Admin - Services Overview</h1>
+            <h1 class="text-center mb-4">Services Overview</h1>
 
             <!-- ✅ Search Bar Component -->
             <ServiceSearchBar 

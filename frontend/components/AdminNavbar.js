@@ -2,9 +2,9 @@ export default {
   template: `
     <nav class="navbar navbar-expand-lg" style="background-color: #7952b3;">
       <div class="container-fluid">
-        <!-- Logo -->
-        <a class="navbar-brand" href="#/admin/home" style="font-weight: bold; color: white;">
-          <img src="/static/logo/logo_svg.svg" alt="HomeCrew" style="width: 50px; height: 50px;" />
+        <!-- Logo (Replaced with Text) -->
+        <a class="navbar-brand" href="#/admin/home" style="font-weight: bold; color: white; font-size: 1.5rem;">
+          HomeNinjas
         </a>
   
         <!-- Navbar Links -->
