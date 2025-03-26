@@ -1043,3 +1043,52 @@ def get_customer_requests():
         'completed': completed,
         'rejected': rejected   # Contains both rejected and cancelled requests
     }), 200
+
+# ------------------------------- Service Rating and Feedback --------------------------------------------------------------------------------------------
+
+@app.route('/customer/requests/<int:request_id>/rate', methods=['POST'])
+@auth_required('token')       # Ensure the customer is authenticated
+@customer_required            # Ensure only customers can access
+def rate_service(request_id):
+    """
+    Allows the customer to rate and provide feedback for completed services only.
+    """
+    # ✅ Get the service request by ID
+    service_request = ServiceRequest.query.get(request_id)
+    if not service_request:
+        return jsonify({'message': 'Service request not found'}), 404
+    
+    # ✅ Ensure the customer owns the request
+    if service_request.customer_id != current_user.id:
+        return jsonify({'message': 'Unauthorized: You can only rate your own requests'}), 403
+    
+    # ✅ Only allow rating for completed services
+    if service_request.service_status != 'completed':
+        return jsonify({'message': 'You can only rate completed services'}), 400
+    
+    # ✅ Parse request data
+    data = request.get_json()
+    
+    # ✅ Handle potential missing data
+    rating = data.get('rating')
+    feedback = data.get('feedback', '')  # Make feedback optional
+
+    # ✅ Convert rating to integer and validate
+    try:
+        rating = int(rating)  # Convert to integer
+    except (ValueError, TypeError):
+        return jsonify({'message': 'Invalid rating format'}), 400
+
+    # ✅ Validate rating (1 to 5)
+    if rating is None:
+        return jsonify({'message': 'Rating is required'}), 400
+    
+    if not (1 <= rating <= 5):
+        return jsonify({'message': 'Rating must be between 1 and 5'}), 400
+    
+    # ✅ Update the service request with rating and feedback
+    service_request.rating = rating
+    service_request.feedback = feedback
+    db.session.commit()
+    
+    return jsonify({'message': 'Rating and feedback submitted successfully'}), 200
