@@ -912,6 +912,42 @@ def customer_dashboard(user_id):
         'pincode': current_user.pincode  # Added pincode field
     }), 200
 
+@app.route('/customer/dashboard/<int:user_id>/update', methods=['PUT'])
+@auth_required('token')  # Ensures the user is logged in
+@customer_required        # Ensures only customers can access
+def update_customer_profile(user_id):   # Pass user_id parameter here
+    """
+    Allows the customer to update their profile details except the name.
+    """
+
+    # ✅ Fetch the current customer
+    if current_user.id != user_id:
+        return jsonify({'message': 'Unauthorized: Cannot update another user\'s profile'}), 403
+
+    # ✅ Parse the request data
+    data = request.get_json()
+
+    # ✅ Validate and update editable fields only
+    current_user.email = data.get('email', current_user.email)
+    current_user.phone = data.get('phone', current_user.phone)
+    current_user.address = data.get('address', current_user.address)
+    current_user.pincode = data.get('pincode', current_user.pincode)
+
+    # ✅ Commit the changes to the database
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Profile updated successfully',
+        'id': current_user.id,
+        'name': current_user.name,            # Non-editable field
+        'email': current_user.email,
+        'phone': current_user.phone,
+        'address': current_user.address,
+        'pincode': current_user.pincode
+    }), 200
+
+
+
 
 @app.route('/customer/home', methods=['GET'])
 @auth_required('token')  # Ensures the user is logged in

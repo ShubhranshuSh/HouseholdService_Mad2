@@ -92,9 +92,11 @@ export default {
                 });
             }
         },
-        logout() {
-            store.commit("logout");
-            this.$router.push("/login");
+
+        // ✅ Navigate to the profile update page
+        editProfile() {
+            const userId = this.$route.params.id || store.state.user_id;
+            this.$router.push(`/customer/dashboard/update/${userId}`);
         }
     },
     template: `
@@ -124,7 +126,7 @@ export default {
               <p><strong>Pincode:</strong> {{ profile.pincode || 'Not available' }}</p>
               
               <div class="mt-4">
-                <button class="btn btn-primary me-2" @click="logout">Logout</button>
+                <button class="btn btn-primary me-2" @click="editProfile">Edit Profile</button>
               </div>
             </div>
             
