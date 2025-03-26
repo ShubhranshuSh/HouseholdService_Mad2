@@ -19,9 +19,10 @@ export default {
   template: `
     <nav class="navbar navbar-expand-lg" style="background-color: #0D6EFD;">
       <div class="container-fluid">
-        <!-- Logo -->
-        <a class="navbar-brand" href="#/service_professional/home" style="font-weight: bold; color: white;">
-          <img src="/static/logo/logo_svg.svg" alt="HomeCrew" style="width: 50px; height: 50px;" />
+        
+        <!-- App Name instead of Logo -->
+        <a class="navbar-brand" href="#/service_professional/home" style="font-weight: bold; color: white; font-size: 24px;">
+          HomeNinjas
         </a>
 
         <!-- Navbar Links -->
@@ -45,15 +46,10 @@ export default {
               <router-link class="nav-link" to="/service_professional/services" style="color: white; font-weight: 500;">My Services</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="/service_professional/customers" style="color: white; font-weight: 500;">Customers</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" to="/service_professional/applications" style="color: white; font-weight: 500;">Applications</router-link>
-            </li>
-            <li class="nav-item">
               <router-link class="nav-link" :to="'/service_professional/dashboard/' + userId" style="color: white; font-weight: 500;">Dashboard</router-link>
             </li>
           </ul>
+
           <!-- Logout Button -->
           <button 
             class="btn btn-danger" 

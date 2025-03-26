@@ -792,6 +792,56 @@ def service_professional_dashboard(user_id):
         'experience': current_user.experience
     }), 200
 
+@app.route('/service_professional/home', methods=['GET'])
+@auth_required('token')  # Ensures the user is logged in
+@service_professional_required  # Ensures only service professionals can access
+def service_professional_home():
+    """
+    Route to fetch all non-flagged services for the Service Professional Home Page
+    """
+    try:
+        # ✅ Fetch all non-flagged services along with provider details using JOIN
+        services = (
+            db.session.query(
+                Service.id,
+                Service.name.label('name'),
+                Service.price,
+                Service.timing,
+                Service.service_category.label('category'),
+                User.name.label('provider'),
+                User.pincode
+            )
+            .join(User, Service.user_id == User.id)
+            .filter(Service.is_flagged == 0)  # ✅ Only non-flagged services
+            .all()
+        )
+
+        # ✅ Check if services exist
+        if not services:
+            return jsonify({'message': 'No services available'}), 404
+
+        # ✅ Convert the query result into a list of dictionaries
+        service_list = [
+            {
+                'id': service.id,
+                'name': service.name,
+                'category': service.category,
+                'price': service.price,
+                'timing': service.timing,
+                'pincode': service.pincode,
+                'provider': service.provider
+            }
+            for service in services
+        ]
+
+        # ✅ Return the list of all non-flagged services
+        return jsonify({'services': service_list}), 200
+
+    except Exception as e:
+        print(f"Error fetching services: {str(e)}")
+        return jsonify({'message': 'Failed to fetch services', 'error': str(e)}), 500
+
+
 @app.route('/service_professional/services', methods=['GET'])
 @auth_required('token')
 @service_professional_required
@@ -819,6 +869,39 @@ def get_professional_services():
     ]
 
     return jsonify(services_list), 200
+
+@app.route('/service_professional/service/<int:service_id>', methods=['GET'])
+@auth_required('token')  # Ensures the user is logged in
+@service_professional_required  # Ensures only service professionals can access
+def get_service_details_professional(service_id):
+    """
+    Route to fetch detailed information of ANY specific service for Service Professionals.
+    """
+    service = Service.query.get(service_id)
+
+    if not service:
+        return jsonify({'message': 'Service not found'}), 404
+
+    # ✅ Check if the service is flagged
+    if service.is_flagged == 1:
+        return jsonify({'message': 'The service is no longer available'}), 410  # HTTP 410: Gone
+
+    # ✅ Fetching the provider details
+    provider = User.query.get(service.user_id)
+
+    # ✅ Constructing the detailed response
+    service_details = {
+        'id': service.id,
+        'name': service.name,
+        'price': service.price,
+        'timing': service.timing,
+        'description': service.description,
+        'service_category': service.service_category,
+        'service_provider': provider.name if provider else 'Unknown'
+    }
+
+    return jsonify(service_details), 200
+
 
 
 
