@@ -61,7 +61,16 @@ export default {
             .then(data => {
                 console.log("Services fetched:", data);
                 if (data && Array.isArray(data.services)) {
-                    this.services = data.services;
+                    // ✅ Mapping consistent field names
+                    this.services = data.services.map(service => ({
+                        id: service.id,
+                        name: service.name,           // ✅ Match backend field names
+                        category: service.category,
+                        price: service.price,
+                        timing: service.timing,
+                        pincode: service.pincode,
+                        provider: service.provider   // ✅ Consistent naming
+                    }));
                 } else {
                     this.services = [];
                 }
@@ -88,7 +97,16 @@ export default {
 
         // ✅ Update services from the search bar
         updateServices(services) {
-            this.services = services;
+            // ✅ Ensure consistent field mapping when updating from search
+            this.services = services.map(service => ({
+                id: service.id,
+                name: service.name,           // ✅ Consistent field names
+                category: service.category,
+                price: service.price,
+                timing: service.timing,
+                pincode: service.pincode,
+                provider: service.provider    // ✅ Consistent naming
+            }));
         }
     },
 

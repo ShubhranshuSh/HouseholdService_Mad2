@@ -216,7 +216,7 @@ def register_service_professional():
 
 
 
-# SearchBar Route
+# ------------------------------------------------------------Search Bar-----------------------------------------------------------------------------
 @app.route('/search-services', methods=['GET'])
 def search_services():
     try:
@@ -224,24 +224,54 @@ def search_services():
         category = request.args.get('category', None)
         pincode = request.args.get('pincode', None)
 
-        # Validate input
-        if not category and not pincode:
-            return jsonify({"message": "Please provide at least a category or pincode"}), 400
+        # ✅ Base query: Only include non-flagged services
+        query = (
+            db.session.query(Service, User)
+            .filter(Service.user_id == User.id)
+            .filter(Service.is_flagged == 0)  # ✅ Only non-flagged services
+        )
 
-        # Build the query with explicit join using user_id
-        query = db.session.query(Service, User).filter(Service.user_id == User.id)
-
+        # ✅ Apply filters only if provided
         if category:
             query = query.filter(Service.service_category.ilike(f"%{category}%"))
         if pincode:
-            query = query.filter(User.pincode == int(pincode))
+            try:
+                query = query.filter(User.pincode == int(pincode))
+            except ValueError:
+                return jsonify({"message": "Invalid pincode format"}), 400
 
         results = query.all()
 
-        if not results:
+        # ✅ If no filters, return all non-flagged services
+        if not results and (category or pincode):
             return jsonify({"message": "No services found matching the search criteria"}), 404
 
-        # Format the results
+        if not results:
+            # Return all non-flagged services if no filters are applied
+            all_services = (
+                db.session.query(Service, User)
+                .filter(Service.user_id == User.id)
+                .filter(Service.is_flagged == 0)  # ✅ Non-flagged services only
+                .all()
+            )
+
+            services = [
+                {
+                    "id": service.id,
+                    "name": service.name,
+                    "category": service.service_category,
+                    "price": service.price,
+                    "timing": service.timing,
+                    "description": service.description,
+                    "pincode": user.pincode,
+                    "provider": user.name
+                }
+                for service, user in all_services
+            ]
+
+            return jsonify(services), 200
+
+        # ✅ Format the filtered results
         services = [
             {
                 "id": service.id,
@@ -262,7 +292,6 @@ def search_services():
         traceback.print_exc()
         app.logger.error(f"Error: {str(e)}")
         return jsonify({"message": "Error occurred while searching for services"}), 500
-    
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -886,18 +915,24 @@ def customer_dashboard(user_id):
 
 @app.route('/customer/home', methods=['GET'])
 @auth_required('token')  # Ensures the user is logged in
-@customer_required  # Ensures only customers can access
+@customer_required        # Ensures only customers can access
 def customer_home():
     try:
-        # Fetch services along with provider details using JOIN
-        services = db.session.query(
-            Service.id,
-            Service.name.label('service_name'),
-            Service.price,
-            Service.timing,
-            Service.service_category,
-            User.name.label('service_provider')
-        ).join(User, Service.user_id == User.id).all()
+        # ✅ Fetch only non-flagged services along with provider details using JOIN
+        services = (
+            db.session.query(
+                Service.id,
+                Service.name.label('name'),         # ✅ Consistent field names
+                Service.price,
+                Service.timing,
+                Service.service_category.label('category'),  
+                User.name.label('provider'),        # ✅ Consistent field names
+                User.pincode
+            )
+            .join(User, Service.user_id == User.id)
+            .filter(Service.is_flagged == 0)       # ✅ Only non-flagged services
+            .all()
+        )
 
         # Check if services exist
         if not services:
@@ -907,25 +942,28 @@ def customer_home():
         service_list = [
             {
                 'id': service.id,
-                'service_name': service.service_name,
+                'name': service.name,               # ✅ Consistent field names
+                'category': service.category,
                 'price': service.price,
                 'timing': service.timing,
-                'service_category': service.service_category,
-                'service_provider': service.service_provider
+                'pincode': service.pincode,
+                'provider': service.provider        # ✅ Consistent field names
             }
             for service in services
         ]
 
-        # Return the service details as JSON
+        # ✅ Return the filtered non-flagged services as JSON
         return jsonify({'services': service_list}), 200
 
     except Exception as e:
         print(f"Error fetching services: {str(e)}")
         return jsonify({'message': 'Failed to fetch services', 'error': str(e)}), 500
 
+
+
 @app.route('/customer/service/<int:service_id>', methods=['GET'])
 @auth_required('token')  # Ensures the user is logged in
-@customer_required  # Ensures only customers can access
+@customer_required        # Ensures only customers can access
 def get_service_details(service_id):
     """
     Route to fetch the detailed information of a specific service.
@@ -934,6 +972,10 @@ def get_service_details(service_id):
     
     if not service:
         return jsonify({'message': 'Service not found'}), 404
+
+    # ✅ Check if the service is flagged
+    if service.is_flagged == 1:
+        return jsonify({'message': 'The service is no longer available'}), 410  # HTTP 410: Gone
 
     # Fetching the provider details
     provider = User.query.get(service.user_id)
@@ -950,6 +992,7 @@ def get_service_details(service_id):
     }
 
     return jsonify(service_details), 200
+
 
 
 @app.route('/customer/requests', methods=['GET'])

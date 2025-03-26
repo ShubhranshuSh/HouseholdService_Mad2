@@ -67,19 +67,15 @@ export default {
 
   methods: {
     async performSearch() {
-      if (!this.selectedCategory && !this.pincode) {
-        this.error = "Please enter a category or pincode.";
-        return;
-      }
-
+      this.error = "";  // ✅ Clear any previous errors
       this.loading = true;
-      this.error = "";
 
       const params = new URLSearchParams();
       if (this.selectedCategory) params.append("category", this.selectedCategory);
       if (this.pincode) params.append("pincode", this.pincode);
 
       try {
+        // ✅ Fetch only non-flagged services from the backend
         const response = await fetch(`/search-services?${params.toString()}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" }
@@ -93,7 +89,7 @@ export default {
           }
         } else {
           const data = await response.json();
-          this.$emit("updateServices", data);
+          this.$emit("updateServices", data);  // ✅ Emit filtered services
         }
       } catch (error) {
         console.error("Error:", error);

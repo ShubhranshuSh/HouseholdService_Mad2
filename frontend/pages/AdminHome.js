@@ -1,13 +1,16 @@
 import AdminNavbar from "../components/AdminNavbar.js";
+import ServiceSearchBar from "../components/ServiceSearchBar.js";   // ✅ Importing the search bar component
 import store from "../utils/store.js";
 
 export default {
     components: {
         AdminNavbar,
+        ServiceSearchBar   // ✅ Registering the search bar component
     },
 
     data() {
         return {
+            allServices: [],           // Store all services temporarily
             unflaggedServices: [],    // Services that are not flagged
             flaggedServices: [],      // Flagged services
             activeTab: "unflagged",   // "unflagged" or "flagged"
@@ -50,6 +53,9 @@ export default {
                 }
 
                 const data = await response.json();
+
+                // ✅ Store all services for search functionality
+                this.allServices = data.services;
 
                 // ✅ Separate flagged and unflagged services
                 this.unflaggedServices = data.services.filter(service => !service.is_flagged);
@@ -97,6 +103,12 @@ export default {
                 console.error("Error toggling flag status:", error);
                 alert("❌ Failed to change flag status.");
             }
+        },
+
+        // ✅ Update services when search results change
+        updateServices(services) {
+            this.unflaggedServices = services.filter(service => !service.is_flagged);
+            this.flaggedServices = services.filter(service => service.is_flagged);
         }
     },
 
@@ -107,6 +119,12 @@ export default {
 
         <div class="container mt-5">
             <h1 class="text-center mb-4">Admin - Services Overview</h1>
+
+            <!-- ✅ Search Bar Component -->
+            <ServiceSearchBar 
+                :services="allServices" 
+                @updateServices="updateServices" 
+            />
 
             <!-- ✅ Tab Navigation -->
             <div class="d-flex justify-content-center mb-4">
