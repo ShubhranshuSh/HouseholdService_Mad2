@@ -84,22 +84,11 @@ class ServiceProfessionalStatusAPI(Resource):
         db.session.commit()
         return {'message': f'Application status updated to {args["status"]}'}, 200
 
-class ServiceProfessionalResumeAPI(Resource):
-    @auth_required('token')
-    @admin_required
-    def get(self, service_professional_id):
-        service_professional = User.query.get(service_professional_id)
-        if not service_professional or not service_professional.resume:
-            abort(404, description="Resume not found")
 
-        if not os.path.exists(service_professional.resume):
-            abort(404, description="Resume file not found")
-
-        return send_file(service_professional.resume, mimetype='application/pdf')
 
 api.add_resource(ServiceProfessionalAPI, '/admin/application/<int:service_professional_id>')
 api.add_resource(ServiceProfessionalStatusAPI, '/admin/application/<int:service_professional_id>/status')
-api.add_resource(ServiceProfessionalResumeAPI, '/admin/application/<int:service_professional_id>/resume')
+
     
 # ----------------- Service API -----------------
 

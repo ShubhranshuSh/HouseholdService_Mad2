@@ -1,9 +1,10 @@
 from functools import wraps
 import os
 import traceback
-from flask import current_app as app, jsonify, request, render_template , abort, send_file
+from flask import current_app as app, jsonify, request, render_template , abort, send_file, send_from_directory
 from flask_security import auth_required, verify_password, hash_password, login_required, current_user, logout_user, login_user
 from backend.models import Service, db, User, Role , ServiceRequest , Service
+from werkzeug.utils import secure_filename
 
 datastore = app.security.datastore
 
@@ -104,52 +105,6 @@ def login():
 
 
 
-# Register routes
-@app.route('/register/customer', methods=['POST'])
-def register_customer():
-    data = request.get_json()
-
-    email = data.get('email')
-    password = data.get('password')
-    confirm_password = data.get('confirm_password')
-    name = data.get('name')
-    phone = data.get('phone')
-    address = data.get('address')
-    pincode = data.get('pincode')
-
-    if not all([email, password, confirm_password, name, phone, address, pincode]):
-        return jsonify({'message': 'All fields are required'}), 400
-
-    if password != confirm_password:
-        return jsonify({'message': 'Passwords do not match'}), 400
-
-    user = app.security.datastore.find_user(email=email)
-    if user:
-        return jsonify({'message': 'User already exists'}), 409
-
-    # Assign customer role
-    role = app.security.datastore.find_role('customer')
-    if not role:
-        return jsonify({'message': 'Customer role is invalid. Please contact admin.'}), 400
-
-    try:
-        user = app.security.datastore.create_user(
-            email=email,
-            password=hash_password(password),
-            roles=[role],
-            name=name,
-            phone=phone,
-            address=address,
-            pincode=pincode,
-            active=True  # Set active status to True
-        )
-        db.session.commit()
-        return jsonify({'message': 'Customer registered successfully'}), 201
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"Error creating customer user: {e}")
-        return jsonify({'message': 'Error creating customer user'}), 500
-
 @app.route('/register/service_professional', methods=['POST'])
 def register_service_professional():
     # Ensure upload folder exists
@@ -170,11 +125,16 @@ def register_service_professional():
     resume = request.files.get('resume')
 
     # Validate file format (only PDF allowed)
+    filename = None
     if resume:
         if not resume.filename.endswith('.pdf'):
             return jsonify({'message': 'Only PDF files are allowed for resume'}), 400
+
+        # Use secure filename
+        filename = secure_filename(resume.filename)
+        
         # Save the resume file
-        resume_path = os.path.join(UPLOAD_FOLDER, resume.filename)
+        resume_path = os.path.join(UPLOAD_FOLDER, filename)
         resume.save(resume_path)
 
     # Input validation: Check required fields
@@ -201,9 +161,9 @@ def register_service_professional():
             address=address,
             pincode=pincode,
             experience=experience,
-            resume=resume_path,  # Save resume path
+            resume=filename,  # ✅ Only save filename, not full path
             service_category=service_category,
-            accepted='Pending',  # Set accepted status to Pending
+            accepted='Pending',
             active=True
         )
         db.session.commit()
@@ -212,7 +172,7 @@ def register_service_professional():
         db.session.rollback()
         app.logger.error(f"Error creating service professional user: {e}")
         return jsonify({'message': 'Error creating service professional user'}), 500
-    
+
 
 
 
@@ -369,24 +329,28 @@ def flag_unflag_service(service_id):
 
 
     
+# ✅ 1. GET Pending Applications Route (Admin)
 @app.route('/admin/applications', methods=['GET'])
-@admin_required
 @auth_required('token')
+@admin_required
 def get_pending_applications():
-    # Debugging: Check received auth token
-    print(f"Auth Header Received: {request.headers.get('Authentication-Token')}")
-
+    """Fetch pending service professional applications."""
+    
+    # Authentication check
     if not current_user.is_authenticated:
         return jsonify({'message': 'User not authenticated'}), 401
 
+    # Ensure only admin can access
     if 'admin' not in [role.name for role in current_user.roles]:
         return jsonify({'message': 'Forbidden: Not an admin'}), 403
 
+    # Fetch pending service professionals
     pending_professionals = User.query.join(User.roles).filter(
         Role.name == 'service_professional',
         User.accepted == "Pending"
     ).all()
 
+    # Prepare applications response
     applications = [
         {
             "id": user.id,
@@ -397,39 +361,46 @@ def get_pending_applications():
             "pincode": user.pincode,
             "experience": user.experience,
             "service_category": user.service_category,
-            "resume": user.resume,
-            "date_applied": user.fs_uniquifier  # Using this as a proxy for application date
+            
+            # ✅ Only send the filename, NOT the full path
+            "resume": user.resume if user.resume else None,  
+            
+            "date_applied": user.fs_uniquifier  # Using unique ID as date reference
         }
         for user in pending_professionals
     ]
 
     return jsonify(applications), 200
 
-
-
 @app.route('/admin/application/<int:service_professional_id>/resume', methods=['GET'])
 @auth_required('token')
 @admin_required
 def get_resume(service_professional_id):
+    """Serve resume PDF file dynamically."""
+    
+    # Fetch service professional
     service_professional = User.query.join(User.roles).filter(
         Role.name == 'service_professional',
         User.id == service_professional_id
     ).first()
 
+    # Handle missing resume or invalid user
     if not service_professional or not service_professional.resume:
-        abort(404)
-
-    resume_path = service_professional.resume
-    if not os.path.exists(resume_path):
-        abort(404)
+        abort(404, description="Resume not found")
 
     try:
-        return send_file(resume_path, mimetype='application/pdf')
+        # ✅ Use only the filename saved in the DB
+        filename = service_professional.resume
+        
+        # ✅ Construct the correct resume path
+        resume_dir = os.path.join(os.getcwd(), 'uploads', 'resumes')
+        
+        # ✅ Serve the resume
+        return send_from_directory(resume_dir, filename, as_attachment=True)
+
     except Exception as e:
         app.logger.error(f"Error sending resume file: {e}")
-        abort(500)
-
-
+        abort(500, description="Internal Server Error")
 
 @app.route('/admin/dashboard', methods=['GET'])
 @admin_required

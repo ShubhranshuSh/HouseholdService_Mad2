@@ -68,7 +68,11 @@ export default {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                this.applications = await response.json();
+                const result = await response.json();
+                this.applications = result.map(app => ({
+                    ...app,
+                    resume: app.resume || ''
+                }));
             } catch (err) {
                 console.error("Error:", err);
                 this.error = `Failed to fetch applications: ${err.message}`;
