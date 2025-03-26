@@ -946,7 +946,9 @@ def get_professional_requests():
             'date': req.date_of_request.strftime('%Y-%m-%d'),
             'time': req.time,
             'remarks': req.remarks,
-            'status': req.service_status
+            
+            # ✅ Use 'status' key instead of 'service_status' for consistency
+            'status': req.service_status  
         }
 
         # ✅ Categorizing requests
