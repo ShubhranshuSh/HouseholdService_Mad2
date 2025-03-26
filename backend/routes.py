@@ -679,17 +679,15 @@ def get_admin_requests():
     
     admin_id = current_user.id
 
-    # ✅ Fetch all services created by the admin
-    services = Service.query.filter_by(user_id=admin_id).all()
-    
-    # ✅ Extract the service IDs
-    service_ids = [service.id for service in services]
-
-    if not service_ids:
-        return jsonify({'message': 'No services found for this admin'}), 404
-
-    # ✅ Fetch all service requests related to the admin's services
-    requests = ServiceRequest.query.filter(ServiceRequest.service_id.in_(service_ids)).all()
+    # ✅ Fetch all service requests with customer and service info in a single query
+    requests = db.session.query(
+        ServiceRequest, 
+        Service, 
+        User
+    ).join(Service, ServiceRequest.service_id == Service.id) \
+     .join(User, ServiceRequest.customer_id == User.id) \
+     .filter(Service.user_id == admin_id) \
+     .all()
 
     # ✅ Grouping requests by status
     pending = []
@@ -697,10 +695,7 @@ def get_admin_requests():
     completed = []
     rejected = []
 
-    for req in requests:
-        service = Service.query.get(req.service_id)
-        customer = User.query.get(req.customer_id)
-
+    for req, service, customer in requests:
         request_info = {
             'id': req.id,
             'service_name': service.name if service else 'Unknown Service',
@@ -728,9 +723,6 @@ def get_admin_requests():
         'completed': completed,
         'rejected': rejected
     }), 200
-
-
-
 
 
 

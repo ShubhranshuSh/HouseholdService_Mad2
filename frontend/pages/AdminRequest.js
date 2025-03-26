@@ -38,47 +38,31 @@ export default {
     },
 
     methods: {
-        // ✅ Fetch Service Requests with Duplicate Removal
+        // ✅ Fetch Service Requests
         async fetchRequests() {
             this.loading = true;
             this.error = null;
 
             try {
-                const [simpleRes, apiRes] = await Promise.all([
-                    fetch('/admin/request', {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authentication-Token': store.state.auth_token
-                        }
-                    }),
-                    fetch('/api/service-requests/pending', {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authentication-Token': store.state.auth_token
-                        }
-                    })
-                ]);
+                const response = await fetch('/admin/request', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': store.state.auth_token
+                    }
+                });
 
-                if (!simpleRes.ok || !apiRes.ok) {
-                    throw new Error(`Failed to fetch requests: ${simpleRes.status} / ${apiRes.status}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch requests: ${response.status}`);
                 }
 
-                const simpleData = await simpleRes.json();
-                const apiData = await apiRes.json();
+                const data = await response.json();
 
-                // ✅ Combine responses and remove duplicates by `id`
-                const combinedPending = [...simpleData.pending, ...apiData];
-
-                // ✅ Remove duplicates using Map (by ID)
-                const uniquePending = Array.from(new Map(combinedPending.map(req => [req.id, req])).values());
-
-                // ✅ Assign unique requests to the pending section
-                this.requests.pending = uniquePending;
-                this.requests.active = [...simpleData.active];
-                this.requests.completed = [...simpleData.completed];
-                this.requests.rejected = [...simpleData.rejected];
+                // ✅ Assign requests to their respective sections
+                this.requests.pending = data.pending || [];
+                this.requests.active = data.active || [];
+                this.requests.completed = data.completed || [];
+                this.requests.rejected = data.rejected || [];
 
             } catch (error) {
                 console.error("Error fetching requests:", error);
@@ -113,7 +97,7 @@ export default {
                 const acceptedRequest = this.requests.pending.find(req => req.id === requestId);
                 if (acceptedRequest) {
                     this.requests.pending = this.requests.pending.filter(req => req.id !== requestId);
-                    acceptedRequest.service_status = 'accepted';
+                    acceptedRequest.status = 'active';   
                     this.requests.active.push(acceptedRequest);
                 }
 
@@ -148,7 +132,7 @@ export default {
                 const rejectedRequest = this.requests.pending.find(req => req.id === requestId);
                 if (rejectedRequest) {
                     this.requests.pending = this.requests.pending.filter(req => req.id !== requestId);
-                    rejectedRequest.service_status = 'rejected';
+                    rejectedRequest.status = 'rejected';   
                     this.requests.rejected.push(rejectedRequest);
                 }
 
@@ -182,7 +166,7 @@ export default {
                 const completedRequest = this.requests.active.find(req => req.id === requestId);
                 if (completedRequest) {
                     this.requests.active = this.requests.active.filter(req => req.id !== requestId);
-                    completedRequest.service_status = 'completed';
+                    completedRequest.status = 'completed';   
                     this.requests.completed.push(completedRequest);
                 }
 
@@ -219,28 +203,44 @@ export default {
             </div>
 
             <div v-if="loading" class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
                 <p>Loading service requests...</p>
             </div>
 
-            <div v-if="!loading && error" class="alert alert-danger">{{ error }}</div>
+            <div v-else-if="error" class="alert alert-danger text-center">
+                {{ error }}
+            </div>
 
             <div v-else>
-                <div v-for="req in requests[activeTab]" :key="req.id" class="card mb-4 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ req.service_name }}</h5>
-                        <p><strong>Customer:</strong> {{ req.customer_name }}</p>
-                        <p><strong>Date:</strong> {{ req.date }}</p>
-                        <p><strong>Status:</strong> {{ req.service_status }}</p>
-
-                        <!-- ✅ Buttons -->
-                        <div v-if="activeTab === 'pending'" class="mt-3">
-                            <button class="btn btn-success me-2" @click="acceptRequest(req.id)">Accept</button>
-                            <button class="btn btn-danger" @click="rejectRequest(req.id)">Reject</button>
+                <div v-for="req in requests[activeTab]" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold">{{ req.service_name }}</h5>
+                            <p><strong>Customer:</strong> {{ req.customer_name }}</p>
+                            <p><strong>Date:</strong> {{ req.date }}</p>
                         </div>
 
-                        <div v-if="activeTab === 'active'" class="mt-3">
-                            <button class="btn btn-success" @click="completeRequest(req.id)">Complete</button>
+                        <!-- ✅ Status Badge Rendering -->
+                        <div>
+                            <span class="badge" 
+                                :class="{
+                                    'bg-warning': req.status === 'pending',
+                                    'bg-primary': req.status === 'active',
+                                    'bg-success': req.status === 'completed',
+                                    'bg-danger': req.status === 'rejected'
+                                }">
+                                {{ req.status }}
+                            </span>
                         </div>
+                    </div>
+
+                    <!-- ✅ Buttons -->
+                    <div class="card-footer bg-white border-0 d-flex justify-content-end pb-3 pe-3">
+                        <button v-if="activeTab === 'pending'" @click="acceptRequest(req.id)" class="btn btn-sm btn-outline-success me-2">Accept</button>
+                        <button v-if="activeTab === 'pending'" @click="rejectRequest(req.id)" class="btn btn-sm btn-outline-danger">Reject</button>
+                        <button v-if="activeTab === 'active'" @click="completeRequest(req.id)" class="btn btn-sm btn-outline-success">Complete</button>
                     </div>
                 </div>
             </div>
