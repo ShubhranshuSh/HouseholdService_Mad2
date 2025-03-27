@@ -27,7 +27,7 @@ export default {
         });
         
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Only Customers can access this page");
+            alert("Only Customers can access this page");
             this.$router.push("/login");
         }
     },
@@ -91,7 +91,7 @@ export default {
                 }
             } catch (error) {
                 console.error("Error cancelling request:", error);
-                alert("❌ Failed to cancel the request. Please try again.");
+                alert(" Failed to cancel the request. Please try again.");
             }
         },
         
@@ -150,7 +150,7 @@ export default {
             </div>
             <div v-else>
                 <div v-if="activeTab === 'pending'">
-                    <h3 class="text-center mb-3">📌 Pending Requests</h3>
+                    <h3 class="text-center mb-3">Pending Requests</h3>
                     <div v-if="requests.pending.length === 0" class="text-muted text-center">No pending requests found.</div>
                     <div v-for="req in requests.pending" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-body d-flex justify-content-between align-items-center">
@@ -175,7 +175,7 @@ export default {
                     </div>
                 </div>
                 <div v-if="activeTab === 'active'">
-                    <h3 class="text-center mb-3">🔥 Active Requests</h3>
+                    <h3 class="text-center mb-3">Active Requests</h3>
                     <div v-if="requests.active.length === 0" class="text-muted text-center">No active requests found.</div>
                     <div v-for="req in requests.active" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-body d-flex justify-content-between align-items-center">
@@ -200,7 +200,7 @@ export default {
                     </div>
                 </div>
                 <div v-if="activeTab === 'completed'">
-                    <h3 class="text-center mb-3">✅ Completed Requests</h3>
+                    <h3 class="text-center mb-3">Completed Requests</h3>
                     <div v-if="requests.completed.length === 0" class="text-muted text-center">No completed requests found.</div>
                     <div v-for="req in requests.completed" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-body d-flex justify-content-between align-items-center">
@@ -222,7 +222,7 @@ export default {
                     </div>
                 </div>
                 <div v-if="activeTab === 'rejected'">
-                    <h3 class="text-center mb-3">🚫 Rejected/Cancelled Requests</h3>
+                    <h3 class="text-center mb-3">Rejected/Cancelled Requests</h3>
                     <div v-if="requests.rejected.length === 0" class="text-muted text-center">No rejected or cancelled requests found.</div>
                     <div v-for="req in requests.rejected" :key="req.id" class="card mb-4 shadow-sm border-0 rounded-3">
                         <div class="card-body d-flex justify-content-between align-items-center">

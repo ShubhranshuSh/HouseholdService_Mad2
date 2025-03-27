@@ -29,12 +29,12 @@ export default {
     beforeCreate() {
         console.log("AdminDashboard - beforeCreate");
         if (!store.state.loggedIn) {
-            alert("🚨 Please login to access this page");
+            alert(" Please login to access this page");
             this.$router.push("/login");
             return;
         }
         if (store.state.role !== "admin") {
-            alert("🚨 Access Denied: Admin privileges required");
+            alert(" Access Denied: Admin privileges required");
             this.$router.push("/login");
         }
     },
@@ -162,19 +162,19 @@ export default {
                         document.body.removeChild(link);
                         window.URL.revokeObjectURL(url);
 
-                        alert("✅ CSV downloaded successfully!");
+                        alert(" CSV downloaded successfully!");
                         this.isExporting = false;
                     } 
                     else if (pollResponse.status === 404) {
                         clearInterval(this.pollInterval);
-                        alert("❌ CSV file not found.");
+                        alert("CSV file not found.");
                         this.isExporting = false;
                     }
                 }, 2000);  // Poll every 2 seconds
 
             } catch (error) {
                 console.error("Error exporting CSV:", error);
-                alert("❌ Failed to export CSV.");
+                alert(" Failed to export CSV.");
                 this.isExporting = false;
             }
         },

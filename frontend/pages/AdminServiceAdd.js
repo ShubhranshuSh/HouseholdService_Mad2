@@ -36,7 +36,7 @@ export default {
     },
     beforeCreate() {
         if (!store.state.loggedIn || store.state.role !== "admin") {
-            alert("🚨 Only Admin can Access this Page");
+            alert(" Only Admin can Access this Page");
             this.$router.push("/login");
         }
     },
@@ -62,7 +62,7 @@ export default {
 
                 const data = await response.json();
                 if (response.ok) {
-                    alert("✅ Service Added Successfully!");
+                    alert(" Service Added Successfully!");
                     this.newService = { name: "", price: "", timing: "", description: "", service_category: "" };
                     this.$router.push("/admin/services"); // Redirect after success
                 } else {

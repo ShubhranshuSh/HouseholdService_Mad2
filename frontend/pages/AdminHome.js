@@ -1,11 +1,11 @@
 import AdminNavbar from "../components/AdminNavbar.js";
-import ServiceSearchBar from "../components/ServiceSearchBar.js";   // ✅ Importing the search bar component
+import ServiceSearchBar from "../components/ServiceSearchBar.js";   // Importing the search bar component
 import store from "../utils/store.js";
 
 export default {
     components: {
         AdminNavbar,
-        ServiceSearchBar   // ✅ Registering the search bar component
+        ServiceSearchBar   // Registering the search bar component
     },
 
     data() {
@@ -24,7 +24,7 @@ export default {
 
     beforeCreate() {
         if (!store.state.loggedIn || store.state.role !== "admin") {
-            alert("🚨 Only Admin can access this page");
+            alert("Only Admin can access this page");
             this.$router.push("/login");
         }
     },
@@ -34,13 +34,13 @@ export default {
     },
 
     methods: {
-        // ✅ Fetch all services and separate into flagged/unflagged
+        // Fetch all services and separate into flagged/unflagged
         async fetchServices() {
             this.loading.unflagged = true;
             this.loading.flagged = true;
 
             try {
-                const timestamp = new Date().getTime();  // ✅ Cache-busting
+                const timestamp = new Date().getTime();  //  Cache-busting
                 const response = await fetch(`/admin/home?timestamp=${timestamp}`, {
                     method: 'GET',
                     headers: {
@@ -55,10 +55,10 @@ export default {
 
                 const data = await response.json();
 
-                // ✅ Store all services for search functionality
+                // Store all services for search functionality
                 this.allServices = data.services;
 
-                // ✅ Separate flagged and unflagged services
+                // Separate flagged and unflagged services
                 this.unflaggedServices = data.services.filter(service => !service.is_flagged);
                 this.flaggedServices = data.services.filter(service => service.is_flagged);
 
@@ -73,7 +73,7 @@ export default {
             }
         },
 
-        // ✅ Toggle flag status dynamically
+        // Toggle flag status dynamically
         async toggleFlag(service) {
             const confirmAction = service.is_flagged
                 ? confirm("Are you sure you want to unflag this service?")
@@ -88,7 +88,7 @@ export default {
                         'Content-Type': 'application/json',
                         'Authentication-Token': store.state.auth_token
                     },
-                    body: JSON.stringify({})   // ✅ Empty body for compatibility
+                    body: JSON.stringify({})   //  Empty body for compatibility
                 });
 
                 if (!response.ok) {
@@ -98,10 +98,10 @@ export default {
                 const result = await response.json();
                 alert(result.message);
 
-                // ✅ Update the flag status dynamically
+                // Update the flag status dynamically
                 service.is_flagged = !service.is_flagged;
 
-                // ✅ Move the service to the appropriate list
+                // Move the service to the appropriate list
                 if (service.is_flagged) {
                     this.unflaggedServices = this.unflaggedServices.filter(s => s.id !== service.id);
                     this.flaggedServices.push(service);
@@ -112,11 +112,11 @@ export default {
 
             } catch (error) {
                 console.error("Error toggling flag status:", error);
-                alert("❌ Failed to change flag status.");
+                alert(" Failed to change flag status.");
             }
         },
 
-        // ✅ Update services dynamically when search results change
+        //  Update services dynamically when search results change
         updateServices(services) {
             this.unflaggedServices = services.filter(service => !service.is_flagged);
             this.flaggedServices = services.filter(service => service.is_flagged);
@@ -125,19 +125,18 @@ export default {
 
     template: `
     <div>
-        <!-- ✅ Admin Navbar -->
+        <!--  Admin Navbar -->
         <AdminNavbar />
 
         <div class="container mt-5">
             <h1 class="text-center mb-4">Services Overview</h1>
 
-            <!-- ✅ Search Bar Component -->
+            <!--  Search Bar Component -->
             <ServiceSearchBar 
                 :services="allServices" 
                 @updateServices="updateServices" 
             />
-
-            <!-- ✅ Tab Navigation -->
+✅ Tab Navigation -->
             <div class="d-flex justify-content-center mb-4">
                 <button 
                     class="btn me-2 px-4 fw-bold"
@@ -155,7 +154,7 @@ export default {
                 </button>
             </div>
 
-            <!-- ✅ Unflagged Services Section -->
+            <!--  Unflagged Services Section -->
             <div v-if="activeTab === 'unflagged'" class="col-12">
                 <div v-if="loading.unflagged" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
@@ -190,7 +189,7 @@ export default {
                 </div>
             </div>
 
-            <!-- ✅ Flagged Services Section -->
+            <!--  Flagged Services Section -->
             <div v-if="activeTab === 'flagged'" class="col-12">
                 <div v-if="loading.flagged" class="text-center py-5">
                     <div class="spinner-border text-danger" role="status">

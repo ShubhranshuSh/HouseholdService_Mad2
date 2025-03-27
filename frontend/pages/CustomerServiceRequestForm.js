@@ -28,7 +28,7 @@ export default {
         });
 
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Only Customers can access this page");
+            alert(" Only Customers can access this page");
             this.$router.push("/login");
         }
     },
@@ -38,7 +38,7 @@ export default {
     },
     methods: {
         async fetchServiceDetails() {
-            // ✅ Fetch service details to display on the form
+            
             const token = store.state.auth_token;
             
             try {
@@ -80,7 +80,7 @@ export default {
             today.setHours(0, 0, 0, 0);
 
             if (selectedDate < today) {
-                alert("❌ You cannot select a past date. Please choose today or a future date.");
+                alert(" You cannot select a past date. Please choose today or a future date.");
                 return;
             }
 
@@ -94,7 +94,7 @@ export default {
             };
 
             try {
-                const response = await fetch(`/api/customer/service/request/${this.serviceId}`, {   // ✅ Correct endpoint
+                const response = await fetch(`/api/customer/service/request/${this.serviceId}`, {   
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -107,15 +107,15 @@ export default {
 
                 if (!response.ok) {
                     if (response.status === 410) {
-                        alert("🚫 Service is no longer available.");
+                        alert(" Service is no longer available.");
                     } else {
-                        alert(`❌ ${data.message || "Failed to create request"}`);
+                        alert(` ${data.message || "Failed to create request"}`);
                     }
                     throw new Error(data.message || "Failed to create request");
                 }
 
                 console.log("Request successful:", data);
-                alert("✅ Service request created successfully!");
+                alert("Service request created successfully!");
                 this.$router.push('/customer/dashboard/' + store.state.user_id);   // Redirect to dashboard
 
             } catch (error) {
@@ -136,7 +136,7 @@ export default {
 
             <form @submit.prevent="submitRequest" class="card shadow p-4">
 
-                <!-- ✅ Non-editable service details -->
+                
                 <div class="mb-3">
                     <label class="form-label">Service Name</label>
                     <input 
@@ -158,7 +158,7 @@ export default {
                 </div>
 
 
-                <!-- ✅ Editable form fields -->
+                <!--  Editable form fields -->
                 <div class="mb-3">
                     <label for="date" class="form-label">Date of Request</label>
                     <input 

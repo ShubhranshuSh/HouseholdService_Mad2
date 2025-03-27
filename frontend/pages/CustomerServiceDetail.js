@@ -5,10 +5,10 @@ export default {
     components: { CustomerNavbar },
     data() {
         return {
-            service: null,            // Service details
-            loading: true,            // Loading state
-            error: null,              // Error message
-            countdown: 3              // ✅ Countdown timer
+            service: null,            
+            loading: true,            
+            error: null,              
+            countdown: 3              
         };
     },
 
@@ -22,7 +22,7 @@ export default {
 
         // Ensure only logged-in customers can access
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Only Customers can access this page");
+            alert(" Only Customers can access this page");
             this.$router.push("/login");
         }
     },
@@ -52,10 +52,10 @@ export default {
                     }
                 });
 
-                if (response.status === 410) {   // ✅ Service flagged case
+                if (response.status === 410) {   
                     this.error = "The service is no longer available.";
 
-                    // ✅ Start countdown and auto-redirect after 3 seconds
+                    
                     const countdownInterval = setInterval(() => {
                         if (this.countdown > 1) {
                             this.countdown--;   // Decrease countdown
@@ -93,7 +93,7 @@ export default {
         <div class="container mt-5">
             <h1 class="text-center mb-4">Service Details</h1>
 
-            <!-- ✅ Loading State -->
+            <!--  Loading State -->
             <div v-if="loading" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="sr-only">Loading...</span>
@@ -101,7 +101,7 @@ export default {
                 <p class="mt-2">Loading service details...</p>
             </div>
 
-            <!-- ✅ Error or Flagged Service Message -->
+            <!--  Error or Flagged Service Message -->
             <div v-else-if="error" class="alert alert-danger text-center">
                 {{ error }}
                 <p v-if="error === 'The service is no longer available.'">
@@ -109,7 +109,7 @@ export default {
                 </p>
             </div>
 
-            <!-- ✅ Service Details -->
+            <!-- Service Details -->
             <div v-else-if="service" class="card shadow-lg p-4">
                 <div class="card-body">
                     <h2 class="card-title text-primary">{{ service.name }}</h2>
@@ -128,7 +128,7 @@ export default {
                 </div>
             </div>
 
-            <!-- ✅ No Service Found -->
+            <!-- No Service Found -->
             <div v-else class="alert alert-warning text-center">
                 <p>No service details found.</p>
             </div>

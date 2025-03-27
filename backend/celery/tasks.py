@@ -14,20 +14,20 @@ def add(x, y):
 
 @shared_task(ignore_result=False)
 def create_csv():
-    """
-    Export service requests closed by professionals into a CSV file.
-    """
+    
+    # Export service requests closed by professionals into a CSV file.
+    
     try:
-        # ✅ Query all service requests
+        # all service requests
         requests = ServiceRequest.query.all()
 
-        # ✅ Prepare CSV data
+        # Prepare CSV data
         output_path = './backend/celery/user-downloads/service_requests.csv'
 
         # Ensure directory exists
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-        # ✅ Write to CSV
+        # Writing to CSV
         with open(output_path, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
 
@@ -57,14 +57,14 @@ def create_csv():
         print(f"Error exporting CSV: {str(e)}")
         return None
     
-# ✅ Daily Reminder Task
+# Daily Reminder Task
 @shared_task(ignore_result=True)
 def send_daily_reminders():
-    """
-    Send daily reminders to service professionals with pending/unvisited service requests.
-    """
+    
+    # Send daily reminders to service professionals with pending/unvisited service requests.
+    
     try:
-        # ✅ Use eager loading to include professionals
+        #  Use eager loading to include professionals
         pending_requests = ServiceRequest.query.options(
             joinedload(ServiceRequest.professional)  # Eager load the relationship
         ).filter(
@@ -72,49 +72,49 @@ def send_daily_reminders():
         ).all()
 
         if not pending_requests:
-            print("⚠️ No requested/unvisited requests found.")
+            print("No requested/unvisited requests found.")
             return
 
-        print(f"🔍 Found {len(pending_requests)} requested/unvisited requests.")
+        print(f" Found {len(pending_requests)} requested/unvisited requests.")
 
-        # ✅ Collect unique professional emails
+        #  Collect unique professional emails
         professionals = {
             getattr(req.professional, 'email', None)
             for req in pending_requests if req.professional
         }
 
         if not professionals:
-            print("⚠️ No professionals linked to requests.")
+            print("No professionals linked to requests.")
             return
 
-        print(f"✅ Sending reminders to {len(professionals)} professionals.")
+        print(f"Sending reminders to {len(professionals)} professionals.")
 
-        # ✅ Send reminder emails
+        # Send reminder emails
         for email in professionals:
             if email:
-                subject = "🔔 Reminder: Pending Service Requests"
+                subject = "Reminder: Pending Service Requests"
                 content = """
                     <h1>Reminder</h1>
                     <p>You have pending/unvisited service requests. 
                     Please review and take appropriate action.</p>
                 """
                 send_email(email, subject, content)
-                print(f"📧 Reminder sent to: {email}")
+                print(f"Reminder sent to: {email}")
 
-        print(f"✅ Reminders sent successfully to {len(professionals)} professionals.")
+        print(f"Reminders sent successfully to {len(professionals)} professionals.")
 
     except Exception as e:
-        print(f"❌ Error sending reminders: {str(e)}")
+        print(f"Error sending reminders: {str(e)}")
 
 
-# ✅ Monthly Report Task
+# Monthly Report Task
 @shared_task(ignore_result=True)
 def send_monthly_reports():
-    """
-    Send monthly service reports to customers.
-    """
+    
+    # Send monthly service reports to customers.
+   
     try:
-        # ✅ Get all customers with service requests
+        # Get all customers with service requests
         customers = User.query.join(ServiceRequest, User.id == ServiceRequest.customer_id).all()
 
         for customer in customers:
@@ -144,9 +144,9 @@ def send_monthly_reports():
             report_content += "</ul>"
 
             # Send the email
-            send_email(customer.email, "📊 Monthly Service Report", report_content)
+            send_email(customer.email, "Monthly Service Report", report_content)
 
-        print(f"✅ Sent monthly reports to {len(customers)} customers.")
+        print(f"Sent monthly reports to {len(customers)} customers.")
 
     except Exception as e:
         print(f"Error sending monthly reports: {str(e)}")

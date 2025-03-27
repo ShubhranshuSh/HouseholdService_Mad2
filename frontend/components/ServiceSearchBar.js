@@ -67,7 +67,7 @@ export default {
 
   methods: {
     async performSearch() {
-      this.error = "";  // ✅ Clear any previous errors
+      this.error = "";  //  Clear any previous errors
       this.loading = true;
 
       const params = new URLSearchParams();
@@ -75,7 +75,7 @@ export default {
       if (this.pincode) params.append("pincode", this.pincode);
 
       try {
-        // ✅ Fetch only non-flagged services from the backend
+        // Fetch only non-flagged services from the backend
         const response = await fetch(`/search-services?${params.toString()}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" }
@@ -89,7 +89,7 @@ export default {
           }
         } else {
           const data = await response.json();
-          this.$emit("updateServices", data);  // ✅ Emit filtered services
+          this.$emit("updateServices", data);  //  Emit filtered services
         }
       } catch (error) {
         console.error("Error:", error);

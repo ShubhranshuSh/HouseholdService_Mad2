@@ -14,7 +14,7 @@ export default {
     },
     beforeCreate() {
         if (!store.state.loggedIn || store.state.role !== "admin") {
-            alert("🚨 Only Admin can Access this Page");
+            alert(" Only Admin can Access this Page");
             this.$router.push("/login");
         }
     },
@@ -76,7 +76,7 @@ export default {
                     return response.json();
                 })
                 .then(data => {
-                    alert("✅ Service deleted successfully!");
+                    alert(" Service deleted successfully!");
                     // Remove the deleted service from the services array
                     this.services = this.services.filter(service => service.id !== serviceId);
                 })

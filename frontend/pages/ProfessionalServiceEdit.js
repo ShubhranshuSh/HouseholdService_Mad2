@@ -22,7 +22,7 @@ export default {
     beforeCreate() {
         // Check if the user is logged in and is a professional
         if (!store.state.loggedIn || store.state.role !== "service_professional") {
-            alert("🚨 Only Service Professionals can access this page.");
+            alert("Only Service Professionals can access this page.");
             this.$router.push("/login");
         }
     },
@@ -127,7 +127,7 @@ export default {
                     throw new Error(errorData.message || `Error: ${response.status}`);
                 }
 
-                alert("✅ Service updated successfully!");
+                alert("Service updated successfully!");
                 this.$router.push("/service_professional/services");
 
             } catch (error) {

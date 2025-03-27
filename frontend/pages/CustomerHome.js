@@ -1,9 +1,9 @@
 import store from "../utils/store.js";
 import CustomerNavbar from "../components/CustomerNavbar.js";
-import ServiceSearchBar from "../components/ServiceSearchBar.js";   // ✅ Importing the search bar component
+import ServiceSearchBar from "../components/ServiceSearchBar.js";   
 
 export default {
-    components: { CustomerNavbar, ServiceSearchBar },   // ✅ Registering the component
+    components: { CustomerNavbar, ServiceSearchBar },   
     data() {
         return {
             services: [],            // List of services
@@ -20,7 +20,7 @@ export default {
             userId: store.state.user_id
         });
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Only Customers can access this page");
+            alert(" Only Customers can access this page");
             this.$router.push("/login");
         }
     },
@@ -30,7 +30,7 @@ export default {
     },
 
     methods: {
-        // 🔥 Fetch all services when the page loads
+        
         fetchServices() {
             this.loading = true;
             const token = store.state.auth_token;
@@ -61,15 +61,15 @@ export default {
             .then(data => {
                 console.log("Services fetched:", data);
                 if (data && Array.isArray(data.services)) {
-                    // ✅ Mapping consistent field names
+                    
                     this.services = data.services.map(service => ({
                         id: service.id,
-                        name: service.name,           // ✅ Match backend field names
+                        name: service.name,          
                         category: service.category,
                         price: service.price,
                         timing: service.timing,
                         pincode: service.pincode,
-                        provider: service.provider   // ✅ Consistent naming
+                        provider: service.provider   
                     }));
                 } else {
                     this.services = [];
@@ -84,28 +84,28 @@ export default {
             });
         },
 
-        // ✅ View Service Details
+        //  View Service Details
         viewServiceDetails(serviceId) {
             this.$router.push(`/customer/service/${serviceId}`);
         },
 
-        // ✅ Book a Service
+        //  Book a Service
         bookNow(serviceId) {
             console.log("Navigating to request form for service:", serviceId);
             this.$router.push(`/customer/service/request/${serviceId}`);
         },
 
-        // ✅ Update services from the search bar
+        //  Update services from the search bar
         updateServices(services) {
-            // ✅ Ensure consistent field mapping when updating from search
+           
             this.services = services.map(service => ({
                 id: service.id,
-                name: service.name,           // ✅ Consistent field names
+                name: service.name,        
                 category: service.category,
                 price: service.price,
                 timing: service.timing,
                 pincode: service.pincode,
-                provider: service.provider    // ✅ Consistent naming
+                provider: service.provider    
             }));
         }
     },
@@ -117,7 +117,7 @@ export default {
         <div class="container mt-5">
             <h1 class="text-center mb-4">Available Services</h1>
 
-            <!-- ✅ Added SearchBar component -->
+            <!--  Added SearchBar component -->
             <ServiceSearchBar @updateServices="updateServices" />
 
             <div v-if="loading" class="text-center py-5">

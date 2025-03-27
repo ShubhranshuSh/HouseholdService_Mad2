@@ -32,9 +32,9 @@ export default {
             userId: store.state.user_id
         });
 
-        // ✅ Check for authentication and role
+        //  Check for authentication and role
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Only Customers can access this page");
+            alert(" Only Customers can access this page");
             this.$router.push("/login");
         }
     },
@@ -45,7 +45,7 @@ export default {
     },
 
     methods: {
-        // ✅ Fetch customer profile data
+        //  Fetch customer profile data
         async fetchProfile() {
             try {
                 const userId = this.$route.params.id || store.state.user_id;
@@ -108,7 +108,7 @@ export default {
             }
         },
 
-        // ✅ Save updated profile
+        //  Save updated profile
         async saveProfile() {
             try {
                 const userId = this.$route.params.id || store.state.user_id;
@@ -126,8 +126,8 @@ export default {
                     body: JSON.stringify({
                         email: this.profile.email,
                         phone: this.profile.phone,
-                        address: this.profile.address,   // ✅ Added address
-                        pincode: this.profile.pincode   // ✅ Added pincode
+                        address: this.profile.address,   
+                        pincode: this.profile.pincode   
                     })
                 });
 
@@ -175,12 +175,12 @@ export default {
                 </div>
 
                 <div class="mb-3">
-                    <label>Address</label>   <!-- ✅ Added address field -->
+                    <label>Address</label>  
                     <input type="text" v-model="profile.address" class="form-control" required />
                 </div>
 
                 <div class="mb-3">
-                    <label>Pincode</label>   <!-- ✅ Added pincode field -->
+                    <label>Pincode</label>   
                     <input type="text" v-model="profile.pincode" class="form-control" required />
                 </div>
 

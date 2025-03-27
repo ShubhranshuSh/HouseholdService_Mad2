@@ -22,7 +22,7 @@ export default {
         this.requestId = this.$route.params.id;
         
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Unauthorized access");
+            alert(" Unauthorized access");
             this.$router.push("/login");
         }
     },

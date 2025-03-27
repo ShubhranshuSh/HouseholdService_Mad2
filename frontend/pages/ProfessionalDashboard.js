@@ -24,7 +24,7 @@ export default {
         });
         
         if (!store.state.loggedIn || store.state.role !== "service_professional") {
-            alert("🚨 Only Service Professionals can access this page");
+            alert("Only Service Professionals can access this page");
             this.$router.push("/login");
         }
     },

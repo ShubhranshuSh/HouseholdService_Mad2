@@ -22,7 +22,7 @@ export default {
         });
 
         if (!store.state.loggedIn || store.state.role !== "service_professional") {
-            alert("🚨 Only Service Professionals can access this page");
+            alert(" Only Service Professionals can access this page");
             this.$router.push("/login");
         }
     },
@@ -32,7 +32,7 @@ export default {
     },
 
     methods: {
-        // 🔥 Fetch all services when the page loads
+        // Fetch all services when the page loads
         fetchServices() {
             this.loading = true;
             const token = store.state.auth_token;
@@ -63,7 +63,7 @@ export default {
             .then(data => {
                 console.log("Services fetched:", data);
                 if (data && Array.isArray(data.services)) {
-                    // ✅ Mapping consistent field names
+                    // Mapping consistent field names
                     this.services = data.services.map(service => ({
                         id: service.id,
                         name: service.name,
@@ -86,12 +86,12 @@ export default {
             });
         },
 
-        // ✅ View Service Details
+        // View Service Details
         viewServiceDetails(serviceId) {
             this.$router.push(`/service_professional/service/${serviceId}`);
         },
 
-        // ✅ Update services from the search bar
+        //  Update services from the search bar
         updateServices(services) {
             this.services = services.map(service => ({
                 id: service.id,
@@ -112,7 +112,7 @@ export default {
         <div class="container mt-5">
             <h1 class="text-center mb-4">Available Services</h1>
 
-            <!-- ✅ Added SearchBar component -->
+            <!-- Added SearchBar component -->
             <ServiceSearchBar @updateServices="updateServices" />
 
             <div v-if="loading" class="text-center py-5">

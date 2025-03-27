@@ -24,7 +24,7 @@ export default {
         });
 
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Only Customers can access this page");
+            alert(" Only Customers can access this page");
             this.$router.push("/login");
         }
     },
@@ -93,7 +93,7 @@ export default {
             }
         },
 
-        // ✅ Navigate to the profile update page
+        // Navigate to the profile update page
         editProfile() {
             const userId = this.$route.params.id || store.state.user_id;
             this.$router.push(`/customer/dashboard/update/${userId}`);

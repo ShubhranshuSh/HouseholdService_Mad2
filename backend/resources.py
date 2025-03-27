@@ -15,6 +15,8 @@ from backend.cache import cache
 api = Api(prefix='/api')
 
 
+#----------------------------------Role-based access control decorators----------------------------------
+
 def admin_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -39,6 +41,8 @@ def service_professional_required(func):
         return func(*args, **kwargs)
     return wrapper
 
+# ----------------- Service Professional API -----------------
+
 service_professional_fields = {
     'id': fields.Integer,
     'name': fields.String,
@@ -49,9 +53,6 @@ service_professional_fields = {
     'experience': fields.Integer,
     'service_category': fields.String,
 }
-
-
-
 
 
 class ServiceProfessionalAPI(Resource):
@@ -96,7 +97,7 @@ api.add_resource(ServiceProfessionalStatusAPI, '/admin/application/<int:service_
     
 # ----------------- Service API -----------------
 
-# ✅ Include `is_flagged` in the response
+
 service_fields = {
     'id': fields.Integer,
     'name': fields.String,
@@ -105,7 +106,7 @@ service_fields = {
     'description': fields.String,
     'service_category': fields.String,
     'user_id': fields.Integer,
-    'is_flagged': fields.Boolean    # ✅ Added is_flagged field
+    'is_flagged': fields.Boolean   
 }
 
 class ServiceAPI(Resource):
@@ -128,7 +129,7 @@ class ServiceAPI(Resource):
 
         data = request.get_json()
 
-        # ✅ Prevent modification of `is_flagged` by non-admins or professionals
+        # Prevent modification of `is_flagged` by non-admins or professionals
         if 'is_flagged' in data:
             del data['is_flagged']
 
@@ -157,14 +158,14 @@ class ServiceListAPI(Resource):
         """Create a new service with `is_flagged` set to False by default"""
         data = request.get_json()
 
-        # ✅ Ensure all required fields are present
+        # Ensure all required fields are present
         if not all(k in data for k in ["name", "price", "timing", "description", "service_category"]):
             return {"message": "Missing required fields"}, 400
 
-        # ✅ Set `is_flagged` to False by default on creation
+        # Set `is_flagged` to False by default on creation
         new_service = Service(
             user_id=current_user.id,
-            is_flagged=False,     # ✅ Automatically set to False on creation
+            is_flagged=False,     
             **data
         )
 
@@ -174,7 +175,7 @@ class ServiceListAPI(Resource):
         return {"message": "Service created successfully"}, 201
 
 
-# ✅ Register API routes
+# Register API routes
 api.add_resource(ServiceAPI, '/services/<int:service_id>')  # Fetch, update, and delete specific service
 api.add_resource(ServiceListAPI, '/services')  # Handle service creation only
 
@@ -182,7 +183,6 @@ api.add_resource(ServiceListAPI, '/services')  # Handle service creation only
 
 # ----------------- Service Request API from Customer -----------------
 
-# ✅ Define the fields for marshalling the response
 service_request_fields = {
     'id': fields.Integer,
     'service_id': fields.Integer,
@@ -196,7 +196,7 @@ service_request_fields = {
     'feedback': fields.String
 }
 
-# ✅ Create Service Request API
+# Create Service Request API
 class ServiceRequestAPI(Resource):
     @marshal_with(service_request_fields)
     @auth_required('token')
@@ -212,31 +212,31 @@ class ServiceRequestAPI(Resource):
         parser.add_argument('remarks', type=str, required=False)
         args = parser.parse_args()
 
-        # ✅ Validate customer role
+        #  Validate customer role
         if not current_user.has_role('customer'):
             return {'message': 'Only customers can create service requests'}, 403
 
-        # ✅ Validate the service existence
+        # Validate the service existence
         service = Service.query.get(service_id)
         if not service:
             return {'message': 'Service not found'}, 404
 
-        # ✅ Check if service is flagged
-        if service.is_flagged:   # ✅ Flagged service validation
+        #  Check if service is flagged
+        if service.is_flagged:   #  Flagged service validation
             return {'message': 'Service You are requesting is no longer available'}, 410
 
-        # ✅ Validate date format
+        #  Validate date format
         try:
             date_of_request = datetime.strptime(args['date_of_request'], '%Y-%m-%d').date()
 
-            # ✅ Ensure date is today or in the future
+            #  Ensure date is today or in the future
             if date_of_request < datetime.now().date():
                 return {'message': 'Choose a valid date.'}, 400
 
         except ValueError:
             return {'message': 'Invalid date format. Use YYYY-MM-DD'}, 400
 
-        # ✅ Create new service request
+        # Create new service request
         new_request = ServiceRequest(
             service_id=service_id,
             customer_id=current_user.id,
@@ -253,30 +253,30 @@ class ServiceRequestAPI(Resource):
         return new_request, 201
 
 
-# ✅ Cancel Service Request API
+# Cancel Service Request API
 class CancelServiceRequestAPI(Resource):
     @auth_required('token')
     @customer_required
     def delete(self, request_id):
         """Cancel a service request by the customer"""
 
-        # ✅ Fetch the service request
+        # Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
         if not service_request:
             return {'message': 'Service request not found'}, 404
 
-        # ✅ Ensure the current user owns the request
+        #  Ensure the current user owns the request
         if service_request.customer_id != current_user.id:
             return {'message': 'Unauthorized: You can only cancel your own requests'}, 403
 
-        # ✅ Allow cancellation for more statuses, including accepted
+        # Allow cancellation for more statuses, including accepted
         if service_request.service_status not in ['requested', 'assigned', 'active', 'accepted']:
             return {'message': 'Only pending or active requests can be cancelled'}, 400
 
-        # ✅ Confirmation message
+        # Confirmation message
         confirmation_message = "Are you sure you want to cancel this service?"
 
-        # ✅ Cancel the request
+        #  Cancel the request
         service_request.service_status = 'cancelled'
         db.session.commit()
 
@@ -286,7 +286,7 @@ class CancelServiceRequestAPI(Resource):
         }, 200
 
 
-# ✅ Edit Service Request API
+#  Edit Service Request API
 class EditServiceRequestAPI(Resource):
     @auth_required('token')
     @customer_required
@@ -295,32 +295,32 @@ class EditServiceRequestAPI(Resource):
         Edit an existing service request by the customer.
         """
 
-        # ✅ Fetch the service request
+        #  Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
         if not service_request:
             return {'message': 'Service request not found'}, 404
 
-        # ✅ Ensure the current user owns the request
+        # Ensure the current user owns the request
         if service_request.customer_id != current_user.id:
             return {'message': 'Unauthorized: You can only edit your own requests'}, 403
 
-        # ✅ Allow editing for more statuses, including accepted
+        #  Allow editing for more statuses, including accepted
         if service_request.service_status not in ['requested', 'assigned', 'active', 'accepted']:
             return {'message': 'Only pending or active requests can be edited'}, 400
 
-        # ✅ Parse the request data
+        # Parse the request data
         parser = reqparse.RequestParser()
         parser.add_argument('date_of_request', type=str, required=False)
         parser.add_argument('time', type=str, required=False)
         parser.add_argument('remarks', type=str, required=False)
         args = parser.parse_args()
 
-        # ✅ Update the service request fields if provided
+        #  Update the service request fields if provided
         if args['date_of_request']:
             try:
                 new_date = datetime.strptime(args['date_of_request'], '%Y-%m-%d').date()
 
-                # ✅ Validate date is today or future
+                #  Validate date is today or future
                 if new_date < datetime.now().date():
                     return {'message': 'Choose a valid date.'}, 400
 
@@ -335,7 +335,7 @@ class EditServiceRequestAPI(Resource):
         if args['remarks']:
             service_request.remarks = args['remarks']
 
-        # ✅ Commit changes to the database
+        #  Commit changes to the database
         db.session.commit()
 
         return {
@@ -344,7 +344,7 @@ class EditServiceRequestAPI(Resource):
         }, 200
 
 
-# ✅ Register the API Routes
+#  Register the API Routes
 api.add_resource(ServiceRequestAPI, '/customer/service/request/<int:service_id>')
 api.add_resource(CancelServiceRequestAPI, '/customer/service/request/cancel/<int:request_id>')
 api.add_resource(EditServiceRequestAPI, '/customer/service/request/edit/<int:request_id>')
@@ -353,7 +353,6 @@ api.add_resource(EditServiceRequestAPI, '/customer/service/request/edit/<int:req
 
 # ----------------- Service Request for Service Professionals and Admin from Customer API -----------------
 
-# ✅ Fields for marshalling the response
 service_request_details_fields = {
     'id': fields.Integer,
     'service_name': fields.String,
@@ -367,7 +366,7 @@ service_request_details_fields = {
     'service_status': fields.String
 }
 
-# ✅ API for fetching only pending service requests (Admin & Service Professional)
+# API for fetching only pending service requests (Admin & Service Professional)
 class ServiceRequestPendingAPI(Resource):
 
     @marshal_with(service_request_details_fields)
@@ -378,14 +377,14 @@ class ServiceRequestPendingAPI(Resource):
 
         service_requests = []
 
-        # ✅ Admin: Fetch only pending requests for their own services
+        #  Admin: Fetch only pending requests for their own services
         if current_user.has_role('admin'):
             service_requests = ServiceRequest.query.join(Service).filter(
                 Service.user_id == current_user.id,   # Only admin's services
                 ServiceRequest.service_status == 'requested'
             ).all()
 
-        # ✅ Service Professional: Fetch only their own pending requests
+        # Service Professional: Fetch only their own pending requests
         elif current_user.has_role('service_professional'):
             service_requests = ServiceRequest.query.join(Service).filter(
                 Service.user_id == current_user.id,   # Only their own services
@@ -395,7 +394,7 @@ class ServiceRequestPendingAPI(Resource):
         else:
             return {'message': 'Access Denied'}, 403
 
-        # ✅ Prepare the response
+        # Prepare the response
         response = []
         for request in service_requests:
             
@@ -418,7 +417,7 @@ class ServiceRequestPendingAPI(Resource):
         return response, 200
 
 
-# ✅ API for Accepting or Rejecting Requests with Ownership Validation
+#  API for Accepting or Rejecting Requests with Ownership Validation
 class ServiceRequestActionAPI(Resource):
     
     @auth_required('token')
@@ -428,29 +427,29 @@ class ServiceRequestActionAPI(Resource):
         data = request.get_json()
         action = data.get('action')
 
-        # ✅ Validate action
+        # Validate action
         if action not in ['accept', 'reject']:
             return {'message': 'Invalid action. Use "accept" or "reject".'}, 400
 
-        # ✅ Fetch the service request
+        #  Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
 
         if not service_request:
             return {'message': 'Service request not found'}, 404
 
-        # ✅ Verify ownership: Ensure only the owner of the service can accept/reject
+        #  Verify ownership: Ensure only the owner of the service can accept/reject
         service = Service.query.get(service_request.service_id)
 
         if not service or service.user_id != current_user.id:
             return {'message': 'Unauthorized access. You cannot modify this request.'}, 403
 
-        # ✅ Update request status
+        # Update request status
         if action == 'accept':
             service_request.service_status = 'accepted'
         elif action == 'reject':
             service_request.service_status = 'rejected'
 
-        # ✅ Save the changes
+        #  Save the changes
         db.session.commit()
 
         return {
@@ -459,33 +458,33 @@ class ServiceRequestActionAPI(Resource):
         }, 200
 
 
-# ✅ API for Marking Accepted Requests as Completed with Ownership Validation
+#  API for Marking Accepted Requests as Completed with Ownership Validation
 class ServiceRequestCompleteAPI(Resource):
     
     @auth_required('token')
     def put(self, request_id):
         """Mark an accepted service request as completed with ownership check"""
 
-        # ✅ Fetch the service request
+        # Fetch the service request
         service_request = ServiceRequest.query.get(request_id)
 
         if not service_request:
             return {'message': 'Service request not found'}, 404
 
-        # ✅ Verify ownership: Ensure only the owner of the service can mark as completed
+        #  Verify ownership: Ensure only the owner of the service can mark as completed
         service = Service.query.get(service_request.service_id)
 
         if not service or service.user_id != current_user.id:
             return {'message': 'Unauthorized access. You cannot complete this request.'}, 403
 
-        # ✅ Ensure the request is in 'accepted' status before marking as completed
+        #  Ensure the request is in 'accepted' status before marking as completed
         if service_request.service_status != 'accepted':
             return {'message': 'Only accepted requests can be marked as completed'}, 400
 
-        # ✅ Update the status to completed
+        #  Update the status to completed
         service_request.service_status = 'completed'
 
-        # ✅ Save changes
+        #  Save changes
         db.session.commit()
 
         return {
@@ -494,7 +493,7 @@ class ServiceRequestCompleteAPI(Resource):
         }, 200
 
 
-# ✅ Register the updated API routes
+#  Register the updated API routes
 api.add_resource(ServiceRequestPendingAPI, '/service-requests/pending')
 api.add_resource(ServiceRequestActionAPI, '/service-requests/<int:request_id>/action')
 api.add_resource(ServiceRequestCompleteAPI, '/service-requests/<int:request_id>/complete')

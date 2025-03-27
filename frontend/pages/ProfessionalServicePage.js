@@ -15,7 +15,7 @@ export default {
     beforeCreate() {
         // Check if user is logged in and is a professional
         if (!store.state.loggedIn || store.state.role !== "service_professional") {
-            alert("🚨 Only Service Professionals can access this page.");
+            alert("Only Service Professionals can access this page.");
             this.$router.push("/login");
         }
     },
@@ -77,7 +77,7 @@ export default {
                     return response.json();
                 })
                 .then(() => {
-                    alert("✅ Service deleted successfully!");
+                    alert("Service deleted successfully!");
                     // Remove the deleted service from the services array
                     this.services = this.services.filter(service => service.id !== serviceId);
                 })

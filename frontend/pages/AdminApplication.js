@@ -16,7 +16,7 @@ export default {
     },
     beforeCreate() {
         if (!store.state.loggedIn || store.state.role !== "admin") {
-            alert("🚨 Only Admin can Access this Page");
+            alert("Only Admin can Access this Page");
             this.$router.push("/login");
         }
     },

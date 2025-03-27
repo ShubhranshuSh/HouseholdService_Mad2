@@ -21,7 +21,7 @@ export default {
     beforeCreate() {
         // Ensure only logged-in professionals can access
         if (!store.state.loggedIn || store.state.role !== "service_professional") {
-            alert("🚨 Only Service Professionals can access this page.");
+            alert("Only Service Professionals can access this page.");
             this.$router.push("/login");
         }
     },
@@ -99,7 +99,7 @@ export default {
 
                 const data = await response.json();
                 if (response.ok) {
-                    alert("✅ Service Added Successfully!");
+                    alert("Service Added Successfully!");
                     // Reset the form after adding the service
                     this.newService = {
                         name: "",

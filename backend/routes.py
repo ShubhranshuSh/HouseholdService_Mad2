@@ -123,7 +123,7 @@ def login():
     if verify_password(password, user.password):
         login_user(user)
 
-        role = user.roles[0].name if user.roles else None  # Fix: Return single role as string
+        role = user.roles[0].name if user.roles else None 
 
         if role == 'admin':
             redirect_path = '/admin/dashboard'
@@ -203,7 +203,7 @@ def register_service_professional():
             address=address,
             pincode=pincode,
             experience=experience,
-            resume=filename,  # ✅ Only save filename, not full path
+            resume=filename,  # Only save filename, not full path
             service_category=service_category,
             accepted='Pending',
             active=True
@@ -218,7 +218,7 @@ def register_service_professional():
 
 
 
-# ------------------------------------------------------------Search Bar-----------------------------------------------------------------------------
+# ---------------------Search Bar-----------------------
 @app.route('/search-services', methods=['GET'])
 def search_services():
     try:
@@ -226,14 +226,14 @@ def search_services():
         category = request.args.get('category', None)
         pincode = request.args.get('pincode', None)
 
-        # ✅ Base query: Only include non-flagged services
+        #  Base query: Only include non-flagged services
         query = (
             db.session.query(Service, User)
             .filter(Service.user_id == User.id)
             .filter(Service.is_flagged == 0)  # ✅ Only non-flagged services
         )
 
-        # ✅ Apply filters only if provided
+        #  Apply filters only if provided
         if category:
             query = query.filter(Service.service_category.ilike(f"%{category}%"))
         if pincode:
@@ -244,7 +244,7 @@ def search_services():
 
         results = query.all()
 
-        # ✅ If no filters, return all non-flagged services
+        #  If no filters, return all non-flagged services
         if not results and (category or pincode):
             return jsonify({"message": "No services found matching the search criteria"}), 404
 
@@ -273,7 +273,7 @@ def search_services():
 
             return jsonify(services), 200
 
-        # ✅ Format the filtered results
+        # Format the filtered results
         services = [
             {
                 "id": service.id,
@@ -299,20 +299,20 @@ def search_services():
 
 
 
-# Admin Routes
+# ---------------------Admin Routes-----------------------
 
 @app.route('/admin/home', methods=['GET'])
-@auth_required('token')  # Ensure the user is authenticated
-@admin_required           # Ensure only admin can access
+@auth_required('token') 
+@admin_required           
 def admin_home():
-    """
-    Route to fetch all services running on the platform for Admin.
-    """
     
-    # ✅ Fetch all services
+    # Route to fetch all services running on the platform for Admin.
+    
+    
+    #  Fetch all services
     services = Service.query.all()
 
-    # ✅ Prepare the response
+    # Prepare the response
     service_list = []
     
     for service in services:
@@ -331,35 +331,35 @@ def admin_home():
 
         service_list.append(service_info)
 
-    # ✅ Return the response
+    # Return the response
     return jsonify({
         'services': service_list
     }), 200
 
 
 @app.route('/admin/flag-service/<int:service_id>', methods=['PUT'])
-@auth_required('token')     # Ensure the user is authenticated
-@admin_required              # Ensure only admin can access
+@auth_required('token')     
+@admin_required             
 def flag_unflag_service(service_id):
-    """
-    Route to toggle the flag status of a service.
-    - Flag the service if unflagged.
-    - Unflag the service if already flagged.
-    """
     
-    # ✅ Fetch the service by ID
+    # Route to toggle the flag status of a service.
+    # - Flag the service if unflagged.
+    # - Unflag the service if already flagged.
+    
+    
+    #  Fetch the service by ID
     service = Service.query.get(service_id)
 
     if not service:
         return jsonify({"message": "Service not found"}), 404
 
-    # ✅ Toggle the flag status
+    # Toggle the flag status
     service.is_flagged = not service.is_flagged
 
-    # ✅ Commit changes to the database
+    # Commit changes to the database
     db.session.commit()
 
-    # ✅ Return success message
+    # Return success message
     status = "flagged" if service.is_flagged else "unflagged"
     return jsonify({
         "message": f"Service successfully {status}.",
@@ -371,12 +371,12 @@ def flag_unflag_service(service_id):
 
 
     
-# ✅ 1. GET Pending Applications Route (Admin)
+# 1. GET Pending Applications Route (Admin)
 @app.route('/admin/applications', methods=['GET'])
 @auth_required('token')
 @admin_required
 def get_pending_applications():
-    """Fetch pending service professional applications."""
+    # Fetch pending service professional applications.
     
     # Authentication check
     if not current_user.is_authenticated:
@@ -404,7 +404,7 @@ def get_pending_applications():
             "experience": user.experience,
             "service_category": user.service_category,
             
-            # ✅ Only send the filename, NOT the full path
+            # Only send the filename, NOT the full path
             "resume": user.resume if user.resume else None,  
             
             "date_applied": user.fs_uniquifier  # Using unique ID as date reference
@@ -418,7 +418,7 @@ def get_pending_applications():
 @auth_required('token')
 @admin_required
 def get_resume(service_professional_id):
-    """Serve resume PDF file dynamically."""
+    # Serve resume PDF file dynamically.
     
     # Fetch service professional
     service_professional = User.query.join(User.roles).filter(
@@ -431,13 +431,13 @@ def get_resume(service_professional_id):
         abort(404, description="Resume not found")
 
     try:
-        # ✅ Use only the filename saved in the DB
+        # Use only the filename saved in the DB
         filename = service_professional.resume
         
-        # ✅ Construct the correct resume path
+        # Construct the correct resume path
         resume_dir = os.path.join(os.getcwd(), 'uploads', 'resumes')
         
-        # ✅ Serve the resume
+        # Serve the resume
         return send_from_directory(resume_dir, filename, as_attachment=True)
 
     except Exception as e:
@@ -486,7 +486,7 @@ def admin_dashboard():
 @auth_required('token')
 def get_service_professionals():
     
-    """Fetch only active service professionals (Accepted = 'Yes' and Active = True)."""
+    # Fetch only active service professionals (Accepted = 'Yes' and Active = True)
     
     professionals = User.query.filter(
         User.roles.any(name="service_professional"),
@@ -629,7 +629,7 @@ def get_customers():
 @admin_required
 @auth_required('token')
 def unflag_customer(user_id):
-    """Admin can unflag (reactivate) a flagged customer (Active = False → True)."""
+    # Admin can unflag (reactivate) a flagged customer (Active = False → True).
     user = User.query.get(user_id)
 
     if not user:
@@ -738,7 +738,7 @@ def get_admin_requests():
     
     admin_id = current_user.id
 
-    # ✅ Fetch all service requests with customer and service info in a single query
+    # Fetch all service requests with customer and service info in a single query
     requests = db.session.query(
         ServiceRequest, 
         Service, 
@@ -748,7 +748,7 @@ def get_admin_requests():
      .filter(Service.user_id == admin_id) \
      .all()
 
-    # ✅ Grouping requests by status
+    # Grouping requests by status
     pending = []
     active = []
     completed = []
@@ -765,7 +765,7 @@ def get_admin_requests():
             'status': req.service_status
         }
 
-        # ✅ Categorizing requests
+        # Categorizing requests
         if req.service_status in ['requested', 'pending']:
             pending.append(request_info)
         elif req.service_status in ['accepted', 'active']:
@@ -775,7 +775,7 @@ def get_admin_requests():
         elif req.service_status in ['rejected', 'cancelled']:
             rejected.append(request_info)
 
-    # ✅ Response with categorized requests
+    # Response with categorized requests
     return jsonify({
         'pending': pending,
         'active': active,
@@ -822,9 +822,6 @@ def get_admin_requests_monthly():
             monthly_data['rejected'][month_idx] += count
 
     return jsonify(monthly_data), 200
-
-
-
 
 
 
@@ -910,7 +907,7 @@ def service_professional_home():
     Route to fetch all non-flagged services for the Service Professional Home Page
     """
     try:
-        # ✅ Fetch all non-flagged services along with provider details using JOIN
+        # Fetch all non-flagged services along with provider details using JOIN
         services = (
             db.session.query(
                 Service.id,
@@ -926,11 +923,11 @@ def service_professional_home():
             .all()
         )
 
-        # ✅ Check if services exist
+        # Check if services exist
         if not services:
             return jsonify({'message': 'No services available'}), 404
 
-        # ✅ Convert the query result into a list of dictionaries
+        # Convert the query result into a list of dictionaries
         service_list = [
             {
                 'id': service.id,
@@ -944,7 +941,7 @@ def service_professional_home():
             for service in services
         ]
 
-        # ✅ Return the list of all non-flagged services
+        # Return the list of all non-flagged services
         return jsonify({'services': service_list}), 200
 
     except Exception as e:
@@ -992,14 +989,14 @@ def get_service_details_professional(service_id):
     if not service:
         return jsonify({'message': 'Service not found'}), 404
 
-    # ✅ Check if the service is flagged
+    # Check if the service is flagged
     if service.is_flagged == 1:
         return jsonify({'message': 'The service is no longer available'}), 410  # HTTP 410: Gone
 
-    # ✅ Fetching the provider details
+    # Fetching the provider details
     provider = User.query.get(service.user_id)
 
-    # ✅ Constructing the detailed response
+    # Constructing the detailed response
     service_details = {
         'id': service.id,
         'name': service.name,
@@ -1027,19 +1024,19 @@ def get_professional_requests():
     
     professional_id = current_user.id
 
-    # ✅ Fetch all services created by the service professional
+    # Fetch all services created by the service professional
     services = Service.query.filter_by(user_id=professional_id).all()
     
-    # ✅ Extract the service IDs
+    # Extract the service IDs
     service_ids = [service.id for service in services]
 
     if not service_ids:
         return jsonify({'message': 'No services found for this professional'}), 404
 
-    # ✅ Fetch all service requests related to the professional's services
+    # Fetch all service requests related to the professional's services
     requests = ServiceRequest.query.filter(ServiceRequest.service_id.in_(service_ids)).all()
 
-    # ✅ Grouping requests by status
+    # Grouping requests by status
     pending = []
     active = []
     completed = []
@@ -1057,11 +1054,11 @@ def get_professional_requests():
             'time': req.time,
             'remarks': req.remarks,
             
-            # ✅ Use 'status' key instead of 'service_status' for consistency
+            # Use 'status' key instead of 'service_status' for consistency
             'status': req.service_status  
         }
 
-        # ✅ Categorizing requests
+        # Categorizing requests
         if req.service_status in ['requested', 'pending']:
             pending.append(request_info)
         elif req.service_status in ['accepted', 'active']:
@@ -1071,7 +1068,7 @@ def get_professional_requests():
         elif req.service_status in ['rejected', 'cancelled']:
             rejected.append(request_info)
 
-    # ✅ Response with categorized requests
+    # Response with categorized requests
     return jsonify({
         'pending': pending,
         'active': active,
@@ -1115,20 +1112,20 @@ def update_customer_profile(user_id):   # Pass user_id parameter here
     Allows the customer to update their profile details except the name.
     """
 
-    # ✅ Fetch the current customer
+    # Fetch the current customer
     if current_user.id != user_id:
         return jsonify({'message': 'Unauthorized: Cannot update another user\'s profile'}), 403
 
-    # ✅ Parse the request data
+    #  Parse the request data
     data = request.get_json()
 
-    # ✅ Validate and update editable fields only
+    #  Validate and update editable fields only
     current_user.email = data.get('email', current_user.email)
     current_user.phone = data.get('phone', current_user.phone)
     current_user.address = data.get('address', current_user.address)
     current_user.pincode = data.get('pincode', current_user.pincode)
 
-    # ✅ Commit the changes to the database
+    #  Commit the changes to the database
     db.session.commit()
 
     return jsonify({
@@ -1149,19 +1146,19 @@ def update_customer_profile(user_id):   # Pass user_id parameter here
 @customer_required        # Ensures only customers can access
 def customer_home():
     try:
-        # ✅ Fetch only non-flagged services along with provider details using JOIN
+        #  Fetch only non-flagged services along with provider details using JOIN
         services = (
             db.session.query(
                 Service.id,
-                Service.name.label('name'),         # ✅ Consistent field names
+                Service.name.label('name'),        
                 Service.price,
                 Service.timing,
                 Service.service_category.label('category'),  
-                User.name.label('provider'),        # ✅ Consistent field names
+                User.name.label('provider'),       
                 User.pincode
             )
             .join(User, Service.user_id == User.id)
-            .filter(Service.is_flagged == 0)       # ✅ Only non-flagged services
+            .filter(Service.is_flagged == 0)       
             .all()
         )
 
@@ -1173,17 +1170,17 @@ def customer_home():
         service_list = [
             {
                 'id': service.id,
-                'name': service.name,               # ✅ Consistent field names
+                'name': service.name,               
                 'category': service.category,
                 'price': service.price,
                 'timing': service.timing,
                 'pincode': service.pincode,
-                'provider': service.provider        # ✅ Consistent field names
+                'provider': service.provider        
             }
             for service in services
         ]
 
-        # ✅ Return the filtered non-flagged services as JSON
+        # Return the filtered non-flagged services as JSON
         return jsonify({'services': service_list}), 200
 
     except Exception as e:
@@ -1204,7 +1201,7 @@ def get_service_details(service_id):
     if not service:
         return jsonify({'message': 'Service not found'}), 404
 
-    # ✅ Check if the service is flagged
+    #  Check if the service is flagged
     if service.is_flagged == 1:
         return jsonify({'message': 'The service is no longer available'}), 410  # HTTP 410: Gone
 
@@ -1236,10 +1233,10 @@ def get_customer_requests():
     """
     customer_id = current_user.id
 
-    # ✅ Fetch all service requests made by the current customer
+    
     requests = ServiceRequest.query.filter_by(customer_id=customer_id).all()
 
-    # ✅ Grouping by status
+   
     pending = []
     active = []
     completed = []
@@ -1257,7 +1254,7 @@ def get_customer_requests():
             'status': req.service_status
         }
 
-        # ✅ Categorizing requests
+        
         if req.service_status in ['requested', 'pending']:
             pending.append(request_info)
         elif req.service_status in ['accepted', 'active']:
@@ -1265,9 +1262,9 @@ def get_customer_requests():
         elif req.service_status in ['completed', 'closed']:
             completed.append(request_info)
         elif req.service_status in ['rejected', 'cancelled']:
-            rejected.append(request_info)   # ✅ Combine 'rejected' & 'cancelled'
+            rejected.append(request_info)   
 
-    # ✅ Response with categorized requests
+    
     return jsonify({
         'pending': pending,
         'active': active,
@@ -1284,40 +1281,40 @@ def rate_service(request_id):
     """
     Allows the customer to rate and provide feedback for completed services only.
     """
-    # ✅ Get the service request by ID
+    
     service_request = ServiceRequest.query.get(request_id)
     if not service_request:
         return jsonify({'message': 'Service request not found'}), 404
     
-    # ✅ Ensure the customer owns the request
+    
     if service_request.customer_id != current_user.id:
         return jsonify({'message': 'Unauthorized: You can only rate your own requests'}), 403
     
-    # ✅ Only allow rating for completed services
+    
     if service_request.service_status != 'completed':
         return jsonify({'message': 'You can only rate completed services'}), 400
     
-    # ✅ Parse request data
+   
     data = request.get_json()
     
-    # ✅ Handle potential missing data
+    
     rating = data.get('rating')
     feedback = data.get('feedback', '')  # Make feedback optional
 
-    # ✅ Convert rating to integer and validate
+    # Convert rating to integer and validate
     try:
         rating = int(rating)  # Convert to integer
     except (ValueError, TypeError):
         return jsonify({'message': 'Invalid rating format'}), 400
 
-    # ✅ Validate rating (1 to 5)
+    # Validate rating (1 to 5)
     if rating is None:
         return jsonify({'message': 'Rating is required'}), 400
     
     if not (1 <= rating <= 5):
         return jsonify({'message': 'Rating must be between 1 and 5'}), 400
     
-    # ✅ Update the service request with rating and feedback
+    # Update the service request with rating and feedback
     service_request.rating = rating
     service_request.feedback = feedback
     db.session.commit()

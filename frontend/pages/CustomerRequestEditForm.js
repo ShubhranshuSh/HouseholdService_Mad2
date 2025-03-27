@@ -24,7 +24,7 @@ export default {
             userId: store.state.user_id
         });
         if (!store.state.loggedIn || store.state.role !== "customer") {
-            alert("🚨 Only Customers can access this page");
+            alert(" Only Customers can access this page");
             this.$router.push("/login");
         }
     },
@@ -119,7 +119,7 @@ export default {
                 
                 const data = await response.json();
                 console.log("Update successful:", data);
-                alert("✅ Service request updated successfully!");
+                alert(" Service request updated successfully!");
                 this.$router.push('/customer/requests');  // Redirect to requests page
                 
             } catch (error) {

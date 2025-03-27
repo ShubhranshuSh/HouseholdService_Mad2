@@ -26,9 +26,9 @@ export default {
             userId: store.state.user_id
         });
 
-        // ✅ Redirect unauthorized users to login
+        // Redirect unauthorized users to login
         if (!store.state.loggedIn || store.state.role !== "admin") {
-            alert("🚨 Only Admins can access this page");
+            alert(" Only Admins can access this page");
             this.$router.push("/login");
         }
     },
@@ -38,7 +38,7 @@ export default {
     },
 
     methods: {
-        // ✅ Fetch Service Requests
+        //  Fetch Service Requests
         async fetchRequests() {
             this.loading = true;
             this.error = null;
@@ -58,7 +58,7 @@ export default {
 
                 const data = await response.json();
 
-                // ✅ Assign requests to their respective sections
+                //  Assign requests to their respective sections
                 this.requests.pending = data.pending || [];
                 this.requests.active = data.active || [];
                 this.requests.completed = data.completed || [];
@@ -72,7 +72,7 @@ export default {
             }
         },
 
-        // ✅ Accept Request
+        // Accept Request
         async acceptRequest(requestId) {
             if (!confirm("Are you sure you want to accept this service request?")) return;
 
@@ -93,7 +93,7 @@ export default {
                 const result = await response.json();
                 alert(result.message);
 
-                // ✅ Move request to "Active" tab
+                // Move request to "Active" tab
                 const acceptedRequest = this.requests.pending.find(req => req.id === requestId);
                 if (acceptedRequest) {
                     this.requests.pending = this.requests.pending.filter(req => req.id !== requestId);
@@ -103,11 +103,11 @@ export default {
 
             } catch (error) {
                 console.error("Error accepting request:", error);
-                alert("❌ Failed to accept the request.");
+                alert(" Failed to accept the request.");
             }
         },
 
-        // ✅ Reject Request
+        //  Reject Request
         async rejectRequest(requestId) {
             if (!confirm("Are you sure you want to reject this service request?")) return;
 
@@ -128,7 +128,7 @@ export default {
                 const result = await response.json();
                 alert(result.message);
 
-                // ✅ Move rejected request to "Rejected" tab
+                //  Move rejected request to "Rejected" tab
                 const rejectedRequest = this.requests.pending.find(req => req.id === requestId);
                 if (rejectedRequest) {
                     this.requests.pending = this.requests.pending.filter(req => req.id !== requestId);
@@ -138,11 +138,11 @@ export default {
 
             } catch (error) {
                 console.error("Error rejecting request:", error);
-                alert("❌ Failed to reject the request.");
+                alert(" Failed to reject the request.");
             }
         },
 
-        // ✅ Mark Request as Completed
+        //  Mark Request as Completed
         async completeRequest(requestId) {
             if (!confirm("Are you sure you want to mark this service request as completed?")) return;
 
@@ -162,7 +162,7 @@ export default {
                 const result = await response.json();
                 alert(result.message);
 
-                // ✅ Move completed request to "Completed" tab
+                //  Move completed request to "Completed" tab
                 const completedRequest = this.requests.active.find(req => req.id === requestId);
                 if (completedRequest) {
                     this.requests.active = this.requests.active.filter(req => req.id !== requestId);
@@ -172,7 +172,7 @@ export default {
 
             } catch (error) {
                 console.error("Error marking request as completed:", error);
-                alert("❌ Failed to mark the request as completed.");
+                alert(" Failed to mark the request as completed.");
             }
         }
     },
@@ -183,7 +183,7 @@ export default {
         <div class="container mt-5">
             <h1 class="text-center mb-4">Admin Service Requests</h1>
 
-            <!-- ✅ Tab Navigation -->
+            <!--  Tab Navigation -->
             <div class="d-flex justify-content-center mb-4">
                 <button class="btn me-2 px-4 fw-bold"
                     :class="activeTab === 'pending' ? 'btn-warning' : 'btn-outline-warning'"
@@ -222,7 +222,7 @@ export default {
                             <p><strong>Date:</strong> {{ req.date }}</p>
                         </div>
 
-                        <!-- ✅ Status Badge Rendering -->
+                        <!--  Status Badge Rendering -->
                         <div>
                             <span class="badge" 
                                 :class="{
@@ -236,7 +236,7 @@ export default {
                         </div>
                     </div>
 
-                    <!-- ✅ Buttons -->
+                    <!--  Buttons -->
                     <div class="card-footer bg-white border-0 d-flex justify-content-end pb-3 pe-3">
                         <button v-if="activeTab === 'pending'" @click="acceptRequest(req.id)" class="btn btn-sm btn-outline-success me-2">Accept</button>
                         <button v-if="activeTab === 'pending'" @click="rejectRequest(req.id)" class="btn btn-sm btn-outline-danger">Reject</button>

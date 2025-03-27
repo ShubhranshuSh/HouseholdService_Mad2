@@ -19,7 +19,7 @@ export default {
   template: `
     <nav class="navbar navbar-expand-lg" style="background-color: #19cc42;">
       <div class="container-fluid">
-        <!-- ✅ "HomeNinjas" Text instead of logo -->
+        <!-- "HomeNinjas" Text instead of logo -->
         <a class="navbar-brand" href="#/customer/home" style="font-weight: bold; color: white; font-size: 24px;">
           HomeNinjas
         </a>
