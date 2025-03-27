@@ -8,6 +8,7 @@ from backend.models import Service, db, User, Role , ServiceRequest , Service
 from werkzeug.utils import secure_filename
 from backend.celery.tasks import add , create_csv
 from celery.result import AsyncResult
+from sqlalchemy import extract, func
 
 datastore = app.security.datastore
 cache = app.cache
@@ -444,24 +445,41 @@ def get_resume(service_professional_id):
         abort(500, description="Internal Server Error")
 
 @app.route('/admin/dashboard', methods=['GET'])
-@admin_required
 @auth_required('token')
+@admin_required
 def admin_dashboard():
-    """Fetch admin details for the dashboard"""
-    admin = User.query.filter(User.roles.any(name="admin")).first()
+    """
+    Admin Dashboard → Fetch admin details.
+    Supports fetching current logged-in admin's profile
+    """
+    try:
+        # Ensure user is authenticated and is an admin
+        if not current_user.is_authenticated or not current_user.has_role('admin'):
+            return jsonify({
+                'message': 'Unauthorized access', 
+                'redirect_url': '/login'
+            }), 401
+
+        # Return admin profile details
+        return jsonify({
+            'message': 'Welcome to Admin Dashboard',
+            'id': current_user.id,
+            'name': current_user.name,
+            'email': current_user.email,
+            'phone': current_user.phone,
+            'address': current_user.address,
+            'pincode': current_user.pincode,
+            'role': 'admin'  # Explicitly set role
+        }), 200
+
+    except Exception as e:
+        # Log the error (use your app's logging mechanism)
+        app.logger.error(f"Admin Dashboard Error: {str(e)}")
+        return jsonify({
+            'message': 'Internal server error', 
+            'redirect_url': '/login'
+        }), 500
     
-    if not admin:
-        return jsonify({"message": "Admin not found"}), 404
-
-    return jsonify({
-        "id": admin.id,
-        "email": admin.email,
-        "name": admin.name,
-        "phone": admin.phone,
-        "address": admin.address,
-        "pincode": admin.pincode
-    }), 200
-
 
 @app.route('/admin/service-professionals', methods=['GET'])
 @admin_required
@@ -764,6 +782,48 @@ def get_admin_requests():
         'completed': completed,
         'rejected': rejected
     }), 200
+
+@app.route('/admin/request/monthly', methods=['GET'])
+@auth_required('token')
+@admin_required
+def get_admin_requests_monthly():
+    """
+    Fetch all service requests across the platform, grouped by month and status.
+    """
+    # Query all service requests with month extraction
+    requests = db.session.query(
+        extract('month', ServiceRequest.date_of_request).label('month'),
+        ServiceRequest.service_status,
+        func.count(ServiceRequest.id).label('count')
+    ).group_by(
+        extract('month', ServiceRequest.date_of_request),
+        ServiceRequest.service_status
+    ).all()
+
+    # Initialize monthly data structure
+    monthly_data = {
+        'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        'pending': [0] * 12,
+        'active': [0] * 12,
+        'completed': [0] * 12,
+        'rejected': [0] * 12,
+    }
+
+    # Populate data
+    for month, status, count in requests:
+        month_idx = int(month) - 1  # Convert to 0-based index
+        if status in ['requested', 'pending']:
+            monthly_data['pending'][month_idx] += count
+        elif status in ['accepted', 'active']:
+            monthly_data['active'][month_idx] += count
+        elif status in ['completed', 'closed']:
+            monthly_data['completed'][month_idx] += count
+        elif status in ['rejected', 'cancelled']:
+            monthly_data['rejected'][month_idx] += count
+
+    return jsonify(monthly_data), 200
+
+
 
 
 
