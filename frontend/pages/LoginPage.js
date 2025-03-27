@@ -2,37 +2,63 @@ import store from '../utils/store.js';  // Adjust the path as needed
 
 export default {
   template: `
-      <div class="d-flex justify-content-center align-items-center vh-100">
-          <div class="card p-4 shadow" style="width: 24rem;">
-              <h2 class="text-center mb-4">Login</h2>
-              <div class="form-group mb-3">
-                  <label for="email">Email Address</label>
-                  <input
-                      id="email"
-                      type="email"
-                      class="form-control"
-                      placeholder="Enter email"
-                      v-model="email"
-                  />
-              </div>
-              <div class="form-group mb-3">
-                  <label for="password">Password</label>
-                  <input
-                      id="password"
-                      type="password"
-                      class="form-control"
-                      placeholder="Enter password"
-                      v-model="password"
-                  />
-              </div>
-              <button 
-                  class="btn btn-primary w-100" 
-                  :disabled="isSubmitting"
-                  @click="submitLogin">
-                  Login
-              </button>
+    <div>
+      <nav class="navbar navbar-expand-lg navbar-light bg-light py-3 shadow-sm">
+        <div class="container">
+          <!-- Logo replaced with text -->
+          <a class="navbar-brand fw-bold d-flex align-items-center" href="#/">HomeNinjas</a>
+          <!-- Toggler for Mobile View -->
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <!-- Navbar Links -->
+          <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <router-link to="/" class="nav-link fs-5">Home</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link to="/login" class="nav-link fs-5">Login</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link to="/register" class="nav-link active fs-5">Register</router-link>
+              </li>
+            </ul>
           </div>
+        </div>
+      </nav>
+      <div class="d-flex justify-content-center align-items-center vh-100">
+        <div class="card p-4 shadow" style="width: 24rem;">
+          <h2 class="text-center mb-4">Login</h2>
+          <div class="form-group mb-3">
+            <label for="email">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              class="form-control"
+              placeholder="Enter email"
+              v-model="email"
+            />
+          </div>
+          <div class="form-group mb-3">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              class="form-control"
+              placeholder="Enter password"
+              v-model="password"
+            />
+          </div>
+          <button 
+            class="btn btn-primary w-100" 
+            :disabled="isSubmitting"
+            @click="submitLogin">
+            Login
+          </button>
+        </div>
       </div>
+    </div>
   `,
   data() {
     return {

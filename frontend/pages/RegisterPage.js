@@ -4,10 +4,8 @@ export default {
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-light bg-light py-3 shadow-sm">
         <div class="container">
-          <!-- Logo -->
-          <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-            <img src="/static/logo/logo_ico.ico" alt="App Logo" style="width: 80px; height: auto;" class="me-2">
-          </a>
+          <!-- Logo replaced with text -->
+          <a class="navbar-brand fw-bold d-flex align-items-center" href="#/">HomeNinjas</a>
           <!-- Toggler for Mobile View -->
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
