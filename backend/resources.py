@@ -1,3 +1,4 @@
+from flask import Flask, jsonify, request, abort , current_app as app
 from functools import wraps
 import os
 from flask_login import current_user
@@ -7,6 +8,9 @@ from sqlalchemy import and_
 from backend.models import User, Role, db, Service , ServiceRequest
 from datetime import datetime
 from flask import abort, jsonify, send_file, request
+from backend.cache import cache
+
+
 
 api = Api(prefix='/api')
 
@@ -106,6 +110,7 @@ service_fields = {
 
 class ServiceAPI(Resource):
 
+    @cache.memoize()
     @marshal_with(service_fields)
     @auth_required('token')
     def get(self, service_id):
@@ -147,6 +152,7 @@ class ServiceAPI(Resource):
 class ServiceListAPI(Resource):
 
     @auth_required('token')
+    @cache.cached(timeout=10)
     def post(self):
         """Create a new service with `is_flagged` set to False by default"""
         data = request.get_json()
@@ -197,6 +203,9 @@ class ServiceRequestAPI(Resource):
     @customer_required
     def post(self, service_id):
         """Create a service request for a specific service"""
+
+        # Clear cache after adding a new request
+        cache.clear()
         parser = reqparse.RequestParser()
         parser.add_argument('date_of_request', type=str, required=True, help='Date of request is required')
         parser.add_argument('time', type=str, required=True, help='Time is required')
@@ -363,6 +372,7 @@ class ServiceRequestPendingAPI(Resource):
 
     @marshal_with(service_request_details_fields)
     @auth_required('token')
+    @cache.cached(timeout=15)
     def get(self):
         """Fetch only pending service requests for Admin or Service Professional they created"""
 

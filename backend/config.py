@@ -11,5 +11,10 @@ class LocalDevelopmentConfig(Config):
     SECRET_KEY = "keyinkingpocket"
     SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authentication-Token'
     WTF_CSRF_ENABLED = False
-    # SECURITY_LOGIN_URL = '/login'
-    # SECURITY_LOGOUT_URL = '/logout'
+
+
+    #Cache configuration
+    CACHE_TYPE = "RedisCache"
+    CACHE_REDIS_HOST = "localhost"
+    CACHE_REDIS_PORT = 6379
+    CACHE_REDIS_DB = 3

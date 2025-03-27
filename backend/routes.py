@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import wraps
 import os
 import traceback
@@ -5,8 +6,11 @@ from flask import current_app as app, jsonify, request, render_template , abort,
 from flask_security import auth_required, verify_password, hash_password, login_required, current_user, logout_user, login_user
 from backend.models import Service, db, User, Role , ServiceRequest , Service
 from werkzeug.utils import secure_filename
+from backend.celery.tasks import add , create_csv
+from celery.result import AsyncResult
 
 datastore = app.security.datastore
+cache = app.cache
 
 # Role-based access control
 def admin_required(func):
@@ -47,8 +51,45 @@ def home():
 def protected():
     return "This is an authenticated user."
 
+# Testing Cache
+@app.route('/cache', methods=['GET'])
+@cache.cached(timeout=5)
+def cache():
+    return {'time': str(datetime.now())}
+
+@app.route('/celery', methods=['GET'])
+def celery():
+    task = add.delay(10, 20)
+    return {'task_id': task.id}
+
+@app.get('/create-csv')
+def createCSV():
+    """
+    Trigger CSV export and return task ID.
+    """
+    task = create_csv.delay()
+    return {'task_id': task.id}, 200
 
 
+@app.get('/get-csv/<id>')
+def getCSV(id):
+    """
+    Retrieve the CSV file once the task is complete.
+    """
+    result = AsyncResult(id)
+
+    if result.ready():
+        file_path = f'./backend/celery/user-downloads/{result.result}'
+        
+        if os.path.exists(file_path):
+            return send_file(file_path, as_attachment=True), 200
+        else:
+            return {'message': 'CSV file not found'}, 404
+    else:
+        return {'message': 'Task not ready'}, 405
+    
+
+    
 # Login route
 @app.route('/login', methods=['POST'])
 def login():
