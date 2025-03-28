@@ -195,9 +195,7 @@ export default {
             </div>
             <!-- Loading State -->
             <div v-if="loading" class="text-center">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
+                
                 <p>Loading dashboard...</p>
             </div>
             <!-- Error Message -->
