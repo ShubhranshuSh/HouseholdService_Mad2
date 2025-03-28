@@ -136,7 +136,7 @@ export default {
                 :services="allServices" 
                 @updateServices="updateServices" 
             />
-✅ Tab Navigation -->
+
             <div class="d-flex justify-content-center mb-4">
                 <button 
                     class="btn me-2 px-4 fw-bold"
