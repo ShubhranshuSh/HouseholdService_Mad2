@@ -144,10 +144,22 @@ class ServiceAPI(Resource):
         service = Service.query.get(service_id)
         if not service or service.user_id != current_user.id:
             return {"message": "Not authorized or service not found"}, 403
-
+        
+        # First, find and delete any service_request records that reference this service
+        related_requests = ServiceRequest.query.filter_by(service_id=service_id).all()
+        
+        for req in related_requests:
+            db.session.delete(req)
+        
+        # Now delete the service
         db.session.delete(service)
-        db.session.commit()
-        return {"message": "Service deleted successfully"}, 200
+        
+        try:
+            db.session.commit()
+            return {"message": "Service deleted successfully"}, 200
+        except Exception as e:
+            db.session.rollback()
+            return {"message": f"Failed to delete service: {str(e)}"}, 500
 
 
 class ServiceListAPI(Resource):

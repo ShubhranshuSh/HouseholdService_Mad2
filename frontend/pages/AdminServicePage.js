@@ -1,6 +1,5 @@
 import AdminNavbar from "../components/AdminNavbar.js";
 import store from "../utils/store.js";
-
 export default {
     components: {
         AdminNavbar,
@@ -69,14 +68,29 @@ export default {
                 })
                 .then(response => {
                     if (!response.ok) {
-                        return response.json().then(data => {
-                            throw new Error(data.message || `HTTP error! Status: ${response.status}`);
+                        return response.text().then(text => {
+                            try {
+                                // Try to parse as JSON first
+                                const data = JSON.parse(text);
+                                throw new Error(data.message || `HTTP error! Status: ${response.status}`);
+                            } catch (e) {
+                                // If not valid JSON, use the raw text or a default message
+                                throw new Error(text || `HTTP error! Status: ${response.status}`);
+                            }
                         });
                     }
-                    return response.json();
+                    return response.text().then(text => {
+                        try {
+                            // Attempt to parse JSON if present
+                            return text ? JSON.parse(text) : { message: "Service deleted successfully" };
+                        } catch (e) {
+                            // If not valid JSON, return a default response
+                            return { message: "Service deleted successfully" };
+                        }
+                    });
                 })
                 .then(data => {
-                    alert(" Service deleted successfully!");
+                    alert("Service deleted successfully!");
                     // Remove the deleted service from the services array
                     this.services = this.services.filter(service => service.id !== serviceId);
                 })
